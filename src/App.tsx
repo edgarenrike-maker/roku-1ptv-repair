@@ -24,11 +24,12 @@ const theme = {
   text: '#111111',
   subtext: '#555555',
   border: '#CCCCCC',
-  chipBg: '#E0D9EF'
+  chipBg: '#E0D9EF',
 } as const;
+
 const baseFont: React.CSSProperties = {
   fontFamily:
-    'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Roku Sans", sans-serif'
+    'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Roku Sans", sans-serif',
 };
 
 const fieldStyle: React.CSSProperties = {
@@ -40,8 +41,9 @@ const fieldStyle: React.CSSProperties = {
   border: `1px solid ${theme.border}`,
   background: '#FFF',
   color: theme.text,
-  ...baseFont
+  ...baseFont,
 };
+
 const btnStyle: React.CSSProperties = {
   background: theme.primary,
   color: '#fff',
@@ -53,8 +55,9 @@ const btnStyle: React.CSSProperties = {
   boxShadow: '0 3px 0 #4E1180',
   transform: 'translateY(0)',
   transition: 'transform 0.1s, box-shadow 0.1s',
-  ...baseFont
+  ...baseFont,
 };
+
 const btnGhost: React.CSSProperties = {
   background: '#fff',
   color: theme.text,
@@ -64,22 +67,24 @@ const btnGhost: React.CSSProperties = {
   cursor: 'pointer',
   fontWeight: 800,
   boxShadow: '0 2px 0 #ddd',
-  ...baseFont
+  ...baseFont,
 };
+
 const card: React.CSSProperties = {
   background: theme.card,
   border: `1px solid ${theme.border}`,
   borderRadius: 16,
   padding: 16,
-  ...baseFont
+  ...baseFont,
 };
+
 const chip: React.CSSProperties = {
   padding: '2px 8px',
   borderRadius: 999,
   background: theme.chipBg,
   fontSize: 12,
   color: theme.text,
-  ...baseFont
+  ...baseFont,
 };
 
 // ===== Runtime guard =====
@@ -135,7 +140,7 @@ type CombinedRecord = { serial: string; intake?: Intake; repairs: Repair[] };
 
 // ===== Defaults =====
 const DEFAULT_TV_SIZES: number[] = [
-  24, 28, 32, 39, 40, 42, 43, 48, 49, 50, 55, 58, 60, 65, 70, 75, 77, 82, 83, 85, 86, 98
+  24, 28, 32, 39, 40, 42, 43, 48, 49, 50, 55, 58, 60, 65, 70, 75, 77, 82, 83, 85, 86, 98,
 ];
 const DEFAULT_RETURN_SOURCE_SUGGESTIONS = [
   'Retail Return – Best Buy',
@@ -145,7 +150,7 @@ const DEFAULT_RETURN_SOURCE_SUGGESTIONS = [
   'Direct RMA',
   'Rev-Log',
   'TPV Service',
-  'Other'
+  'Other',
 ];
 const DEFAULT_RETURN_REASON_SUGGESTIONS = [
   'No power',
@@ -160,7 +165,7 @@ const DEFAULT_RETURN_REASON_SUGGESTIONS = [
   'Cosmetic damage',
   'Remote missing',
   'Stand missing',
-  'Other'
+  'Other',
 ];
 const FAILURE_CODES = [
   'PSU_NO_POWER',
@@ -171,7 +176,7 @@ const FAILURE_CODES = [
   'WIFI_WEAK',
   'HDMI_FAIL',
   'AUDIO_NO_SOUND',
-  'OTHER'
+  'OTHER',
 ];
 const ACTION_CODES = [
   'RESEAT_FFC',
@@ -181,7 +186,7 @@ const ACTION_CODES = [
   'REPLACE_TCON',
   'FW_REFLASH',
   'CLEAN_CONNECTOR',
-  'REWORK_SOLDER'
+  'REWORK_SOLDER',
 ];
 
 // ===== Criteria text =====
@@ -191,76 +196,64 @@ const CRITERIA: Record<string, { title: string; bullets: string[] }> = {
     bullets: [
       'Carton/rear/RMA match model/size/market; serial readable.',
       'Regulatory marks present (UL/FCC/ICES/RCM).',
-      'Mismatch → Conditional; missing/altered → Fail.'
-    ]
+      'Mismatch → Conditional; missing/altered → Fail.',
+    ],
   },
   safety_ok: {
     title: 'Safety',
     bullets: [
       'Cord insulation intact; ground prong present.',
       'Rear cover fully seated; EMI shields in place.',
-      'Any safety defect → Fail.'
-    ]
+      'Any safety defect → Fail.',
+    ],
   },
   ports_intact: {
     title: 'Ports',
     bullets: [
       'HDMI/USB/Coax/Optical aligned; no bent pins.',
-      'Minor scuff → Conditional; cracked/bent → Fail.'
-    ]
+      'Minor scuff → Conditional; cracked/bent → Fail.',
+    ],
   },
   power_symptom: {
     title: 'Power symptom',
     bullets: [
       'Reproduce symptom; log LED/boot code if any.',
-      'Not reproducible after 2 cycles → N/A note.'
-    ]
+      'Not reproducible after 2 cycles → N/A note.',
+    ],
   },
-  esd_ok: {
-    title: 'ESD setup',
-    bullets: ['Wrist strap verified; mat ground <10MΩ.', 'Any breach → Fail.']
-  },
+  esd_ok: { title: 'ESD setup', bullets: ['Wrist strap verified; mat ground <10MΩ.', 'Any breach → Fail.'] },
   cosmetic_backcover: {
     title: 'Cosmetic – Back cover',
-    bullets: [
-      'No cracks/dents; tabs not broken.',
-      'Scratch ≤30mm → Conditional; cracks/gouges → Fail.'
-    ]
+    bullets: ['No cracks/dents; tabs not broken.', 'Scratch ≤30mm → Conditional; cracks/gouges → Fail.'],
   },
   cosmetic_screen: {
     title: 'Cosmetic – Screen',
-    bullets: [
-      'No cracks, lines, pressure mura.',
-      'Hairline scratch ≤10mm outside AA → Conditional.'
-    ]
+    bullets: ['No cracks, lines, pressure mura.', 'Hairline scratch ≤10mm outside AA → Conditional.'],
   },
   cosmetic_bezel: {
     title: 'Cosmetic – Bezel',
-    bullets: ['No cracks/chips; light scuffs okay.', 'Gaps >1.5mm/deformation → Fail.']
+    bullets: ['No cracks/chips; light scuffs okay.', 'Gaps >1.5mm/deformation → Fail.'],
   },
   cosmetic_base: {
     title: 'Cosmetic – Base/Stand',
-    bullets: ['Stable; no cracks; scuffs okay → Conditional.', 'Structural damage → Fail.']
+    bullets: ['Stable; no cracks; scuffs okay → Conditional.', 'Structural damage → Fail.'],
   },
   accessory_remote: {
     title: 'Accessory – Remote',
-    bullets: [
-      'Correct model; housing intact; battery door present.',
-      'Missing → Fail; wrong model → Conditional.'
-    ]
+    bullets: ['Correct model; housing intact; battery door present.', 'Missing → Fail; wrong model → Conditional.'],
   },
   accessory_stand: {
     title: 'Accessory – Stand parts',
-    bullets: ['All legs/feet/trims present; fits firmly.', 'Missing structural piece → Fail.']
+    bullets: ['All legs/feet/trims present; fits firmly.', 'Missing structural piece → Fail.'],
   },
   accessory_powercord: {
     title: 'Accessory – Power cord',
-    bullets: ['OEM spec; no cuts; strain relief OK.', 'Non-OEM but compatible → Conditional; damage → Fail.']
+    bullets: ['OEM spec; no cuts; strain relief OK.', 'Non-OEM but compatible → Conditional; damage → Fail.'],
   },
   accessory_screws: {
     title: 'Accessory – Screws',
-    bullets: ['Correct count/thread; heads not stripped.', 'Missing critical screw(s) → Fail.']
-  }
+    bullets: ['Correct count/thread; heads not stripped.', 'Missing critical screw(s) → Fail.'],
+  },
 };
 
 // ===== IndexedDB Hook =====
@@ -301,9 +294,8 @@ function downloadCSV(filename: string, rows: Array<Record<string, any>>) {
   if (!isBrowser || !rows.length) return;
   const headers = Array.from(new Set(rows.flatMap((r) => Object.keys(r))));
   const escape = (v: any) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const csv = [headers.join(',')]
-    .concat(rows.map((r) => headers.map((h) => escape(r[h])).join(',')))
-    .join('\n');
+  const csv =
+    [headers.join(',')].concat(rows.map((r) => headers.map((h) => escape(r[h])).join(','))).join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -351,7 +343,10 @@ function downloadPDF(record: any) {
       line(`Created: ${new Date(record.createdAt).toLocaleString()}`);
       line('Checklist:');
       Object.entries(record.checklist).forEach(([k, v]) => line(`  • ${k}: ${v}`));
-      if (record.notes) line(`Notes: ${record.notes}`);
+      if (record.notes) {
+        line('Notes:');
+        record.notes.split('\n').forEach((n: string) => line('  ' + n));
+      }
       if (record.photos?.length) {
         line('Photos:');
         record.photos.slice(0, 3).forEach((p, idx) => {
@@ -370,7 +365,10 @@ function downloadPDF(record: any) {
       if (record.technician) line(`Technician: ${record.technician}`);
       if (record.startAt) line(`Start: ${new Date(record.startAt).toLocaleString()}`);
       if (record.endAt) line(`End: ${new Date(record.endAt).toLocaleString()}`);
-      if (record.notes) line(`Notes: ${record.notes}`);
+      if (record.notes) {
+        line('Notes:');
+        record.notes.split('\n').forEach((n: string) => line('  ' + n));
+      }
       if (record.photos?.length) {
         line('Photos:');
         record.photos.slice(0, 3).forEach((p, idx) => {
@@ -422,7 +420,10 @@ function downloadCombinedPDF(rec: CombinedRecord) {
       line(`Created: ${new Date(i.createdAt).toLocaleString()}`);
       line('Checklist:');
       Object.entries(i.checklist).forEach(([k, v]) => line(`  • ${k}: ${v}`));
-      if (i.notes) line(`Notes: ${i.notes}`);
+      if (i.notes) {
+        line('Notes:');
+        i.notes.split('\n').forEach((n: string) => line('  ' + n));
+      }
       if (i.photos?.length) {
         line('Photos:');
         i.photos.slice(0, 3).forEach((p, idx) => {
@@ -447,7 +448,10 @@ function downloadCombinedPDF(rec: CombinedRecord) {
         line(`Actions: ${(r.actions || []).join(', ')}`);
         line(`Disposition: ${r.disposition}`);
         if (r.technician) line(`Technician: ${r.technician}`);
-        if (r.notes) line(`Notes: ${r.notes}`);
+        if (r.notes) {
+          line('Notes:');
+          r.notes.split('\n').forEach((n: string) => line('  ' + n));
+        }
         if (r.photos?.length) {
           line('Photos:');
           r.photos.slice(0, 3).forEach((p, idx2) => {
@@ -477,7 +481,7 @@ function UiSelect({
   onChange,
   placeholder,
   options,
-  required
+  required,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -493,11 +497,7 @@ function UiSelect({
       onChange={(e) => onChange(e.target.value)}
       required={required}
     >
-      {placeholder ? (
-        <option value="" disabled>
-          {placeholder}
-        </option>
-      ) : null}
+      {placeholder ? <option value="" disabled>{placeholder}</option> : null}
       {options.map((opt) => (
         <option key={opt} value={opt}>
           {opt}
@@ -512,7 +512,7 @@ function UiCombo({
   setValue,
   options,
   placeholder,
-  allowCustomLabel = 'Custom…'
+  allowCustomLabel = 'Custom…',
 }: {
   value: string;
   setValue: (v: string) => void;
@@ -538,11 +538,7 @@ function UiCombo({
   return (
     <div>
       <select style={fieldStyle} value={selectVal} onChange={(e) => onSelect(e.target.value)}>
-        {placeholder ? (
-          <option value="" disabled>
-            {placeholder}
-          </option>
-        ) : null}
+        {placeholder ? <option value="" disabled>{placeholder}</option> : null}
         {options.map((opt) => (
           <option key={opt} value={opt}>
             {opt}
@@ -567,7 +563,7 @@ function UiMultiCombo({
   value,
   setValue,
   options,
-  placeholder = 'Select actions…'
+  placeholder = 'Select actions…',
 }: {
   value: string[];
   setValue: (v: string[]) => void;
@@ -705,10 +701,31 @@ function RecordViewer({ record }: { record: any }) {
             </div>
           ) : null}
         </div>
-        {/* 🔥 Show Intake Notes in viewer */}
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontWeight: 600, marginBottom: 6 }}>Checklist</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left', padding: 6 }}>Item</th>
+                <th style={{ textAlign: 'left', padding: 6 }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(i.checklist).map(([k, v]) => (
+                <tr key={k}>
+                  <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>
+                    {k.replace(/_/g, ' ')}
+                  </td>
+                  <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {i.notes ? (
           <div style={{ marginTop: 12 }}>
-            <b>Notes:</b> {i.notes}
+            <b>Notes:</b>
+            <div style={{ whiteSpace: 'pre-wrap', marginTop: 4 }}>{i.notes}</div>
           </div>
         ) : null}
         {i.photos?.length ? (
@@ -720,7 +737,13 @@ function RecordViewer({ record }: { record: any }) {
                   key={idx}
                   src={p}
                   alt={`i${idx}`}
-                  style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, border: `1px solid ${theme.border}` }}
+                  style={{
+                    width: 96,
+                    height: 96,
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                    border: `1px solid ${theme.border}`,
+                  }}
                 />
               ))}
             </div>
@@ -761,10 +784,10 @@ function RecordViewer({ record }: { record: any }) {
             </div>
           ) : null}
         </div>
-        {/* 🔥 Show Repair Notes in viewer */}
         {r.notes ? (
           <div style={{ marginTop: 12 }}>
-            <b>Notes:</b> {r.notes}
+            <b>Notes:</b>
+            <div style={{ whiteSpace: 'pre-wrap', marginTop: 4 }}>{r.notes}</div>
           </div>
         ) : null}
         {r.photos?.length ? (
@@ -776,7 +799,13 @@ function RecordViewer({ record }: { record: any }) {
                   key={idx}
                   src={p}
                   alt={`r${idx}`}
-                  style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, border: `1px solid ${theme.border}` }}
+                  style={{
+                    width: 96,
+                    height: 96,
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                    border: `1px solid ${theme.border}`,
+                  }}
                 />
               ))}
             </div>
@@ -797,21 +826,23 @@ function CombinedViewer({ rec }: { rec: CombinedRecord }) {
           <RecordViewer record={rec.intake} />
         </div>
       ) : (
-        <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>No intake record stored for this serial.</div>
+        <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>
+          No intake record stored for this serial.
+        </div>
       )}
 
-      {rec.repairs.length
-        ? rec.repairs
-            .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
-            .map((r, idx) => (
-              <div key={idx} style={card}>
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>Repair #{idx + 1}</div>
-                <RecordViewer record={r} />
-              </div>
-            ))
-        : (
-          <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>No repairs recorded yet.</div>
-          )}
+      {rec.repairs.length ? (
+        rec.repairs
+          .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
+          .map((r, idx) => (
+            <div key={idx} style={card}>
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>Repair #{idx + 1}</div>
+              <RecordViewer record={r} />
+            </div>
+          ))
+      ) : (
+        <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>No repairs recorded yet.</div>
+      )}
     </div>
   );
 }
@@ -821,7 +852,7 @@ function IntakeForm({
   onSaved,
   sizes,
   sources,
-  reasons
+  reasons,
 }: {
   onSaved: (intake: Intake) => void;
   sizes: number[];
@@ -851,16 +882,15 @@ function IntakeForm({
       accessory_remote: 'Pass',
       accessory_stand: 'Pass',
       accessory_powercord: 'Pass',
-      accessory_screws: 'Pass'
+      accessory_screws: 'Pass',
     },
     photos: [],
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   });
   const [openHelp, setOpenHelp] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const toggleHelp = (k: string) => setOpenHelp((prev) => ({ ...prev, [k]: !prev[k] }));
-  const set = <K extends keyof Intake>(k: K, val: Intake[K]) =>
-    setV((prev) => ({ ...prev, [k]: val }));
+  const set = <K extends keyof Intake>(k: K, val: Intake[K]) => setV((prev) => ({ ...prev, [k]: val }));
   const setC = <K extends keyof Intake['checklist']>(
     k: K,
     val: Intake['checklist'][K]
@@ -872,10 +902,6 @@ function IntakeForm({
     v.checklist.ports_intact === 'Fail' ||
     v.checklist.power_symptom === 'Fail' ||
     v.checklist.esd_ok === 'Fail';
-
-  function removePhoto(idx: number) {
-    setV((prev) => ({ ...prev, photos: prev.photos.filter((_, i) => i !== idx) }));
-  }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -894,7 +920,7 @@ function IntakeForm({
         returnReason: '',
         conditionIn: '',
         notes: '',
-        photos: []
+        photos: [],
       });
     } finally {
       setSaving(false);
@@ -914,13 +940,14 @@ function IntakeForm({
     ['accessory_remote', 'Accessory – Remote'],
     ['accessory_stand', 'Accessory – Stand parts'],
     ['accessory_powercord', 'Accessory – Power cord'],
-    ['accessory_screws', 'Accessory – Screws']
+    ['accessory_screws', 'Accessory – Screws'],
   ] as const;
 
   return (
     <form onSubmit={onSubmit} style={{ display: 'grid', gap: 16 }}>
       <div style={card}>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Identification</div>
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Serial Number</label>
         <input style={fieldStyle} value={v.serial} onChange={(e) => set('serial', e.target.value)} required />
 
@@ -957,7 +984,7 @@ function IntakeForm({
         <UiCombo
           value={v.returnSource}
           setValue={(val) => set('returnSource', val)}
-          options={sources}
+          options={DEFAULT_RETURN_SOURCE_SUGGESTIONS}
           placeholder="Select return source…"
         />
 
@@ -965,7 +992,7 @@ function IntakeForm({
         <UiCombo
           value={v.returnReason}
           setValue={(val) => set('returnReason', val)}
-          options={reasons}
+          options={DEFAULT_RETURN_REASON_SUGGESTIONS}
           placeholder="Select return reason…"
         />
 
@@ -1008,7 +1035,7 @@ function IntakeForm({
                   background: '#FFF',
                   border: `1px dashed ${theme.border}`,
                   padding: 8,
-                  borderRadius: 8
+                  borderRadius: 8,
                 }}
               >
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>{CRITERIA[k]?.title || label}</div>
@@ -1032,22 +1059,23 @@ function IntakeForm({
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
           <PhotoPicker onPick={(d) => setV((prev) => ({ ...prev, photos: [...prev.photos, d] }))} />
           {v.photos.map((p, i) => (
-            <div key={i} style={{ position: 'relative' }}>
+            <div key={i} style={{ position: 'relative', width: 72, height: 72 }}>
               <img
                 src={p}
                 alt={`p${i}`}
                 style={{
-                  width: 72,
-                  height: 72,
+                  width: '100%',
+                  height: '100%',
                   objectFit: 'cover',
                   borderRadius: 8,
-                  border: `1px solid ${theme.border}`
+                  border: `1px solid ${theme.border}`,
                 }}
               />
-              {/* 🔥 delete photo button */}
               <button
                 type="button"
-                onClick={() => removePhoto(i)}
+                onClick={() =>
+                  setV((prev) => ({ ...prev, photos: prev.photos.filter((_, idx2) => idx2 !== i) }))
+                }
                 title="Remove photo"
                 style={{
                   position: 'absolute',
@@ -1056,11 +1084,12 @@ function IntakeForm({
                   width: 22,
                   height: 22,
                   borderRadius: '50%',
-                  border: '0',
+                  border: `1px solid ${theme.border}`,
                   background: '#fff',
-                  boxShadow: '0 0 0 1px #ccc',
                   cursor: 'pointer',
-                  fontWeight: 800
+                  fontWeight: 800,
+                  lineHeight: '20px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
                 }}
               >
                 ×
@@ -1070,7 +1099,7 @@ function IntakeForm({
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button disabled={saving} style={btnStyle}>
           {saving ? 'Saving…' : 'Save Intake & Continue'}
         </button>
@@ -1096,10 +1125,6 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
   const [notes, setNotes] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
 
-  function removePhoto(idx: number) {
-    setPhotos((prev) => prev.filter((_, i) => i !== idx));
-  }
-
   function save(e: React.FormEvent) {
     e.preventDefault();
     if (!serial) return alert('Serial is required');
@@ -1112,7 +1137,7 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
       actions,
       disposition,
       notes: notes || undefined,
-      photos
+      photos,
     });
     setSerial('');
     setStartAt(new Date().toISOString().slice(0, 16));
@@ -1134,7 +1159,12 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <div>
             <label style={{ fontSize: 12, color: theme.subtext }}>Start</label>
-            <input type="datetime-local" style={fieldStyle} value={startAt} onChange={(e) => setStartAt(e.target.value)} />
+            <input
+              type="datetime-local"
+              style={fieldStyle}
+              value={startAt}
+              onChange={(e) => setStartAt(e.target.value)}
+            />
           </div>
           <div>
             <label style={{ fontSize: 12, color: theme.subtext }}>End</label>
@@ -1142,19 +1172,39 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
           </div>
         </div>
         <label style={{ fontSize: 12, color: theme.subtext }}>Technician</label>
-        <input style={fieldStyle} value={technician} onChange={(e) => setTechnician(e.target.value)} placeholder="Tech name or ID" />
+        <input
+          style={fieldStyle}
+          value={technician}
+          onChange={(e) => setTechnician(e.target.value)}
+          placeholder="Tech name or ID"
+        />
       </div>
 
       <div style={card}>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Diagnosis & Actions</div>
         <label style={{ fontSize: 12, color: theme.subtext }}>Failure Code</label>
-        <UiCombo value={failureCode} setValue={setFailureCode} options={FAILURE_CODES} placeholder="Select failure code…" />
+        <UiCombo
+          value={failureCode}
+          setValue={setFailureCode}
+          options={FAILURE_CODES}
+          placeholder="Select failure code…"
+        />
         <label style={{ fontSize: 12, color: theme.subtext }}>Actions</label>
         <UiMultiCombo value={actions} setValue={setActions} options={ACTION_CODES} placeholder="Add actions…" />
         <label style={{ fontSize: 12, color: theme.subtext }}>Disposition</label>
-        <UiSelect value={disposition} onChange={(val) => setDisposition(val as RepairDisposition)} options={['Repaired', 'Scrap', 'NTF', 'BER']} />
+        <UiSelect
+          value={disposition}
+          onChange={(val) => setDisposition(val as RepairDisposition)}
+          options={['Repaired', 'Scrap', 'NTF', 'BER']}
+        />
         <label style={{ fontSize: 12, color: theme.subtext }}>Notes</label>
-        <textarea style={{ ...fieldStyle, height: 80 }} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Root cause, parts replaced, observations…" />
+        <textarea
+          style={{ ...fieldStyle, height: 80 }}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Root cause, parts replaced, observations…"
+        />
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontWeight: 600 }}>Photos</div>
           <div style={{ fontSize: 12, color: theme.subtext }}>{photos.length}</div>
@@ -1162,22 +1212,21 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
           <PhotoPicker onPick={(d) => setPhotos((prev) => [...prev, d])} />
           {photos.map((p, i) => (
-            <div key={i} style={{ position: 'relative' }}>
+            <div key={i} style={{ position: 'relative', width: 72, height: 72 }}>
               <img
                 src={p}
                 alt={`r${i}`}
                 style={{
-                  width: 72,
-                  height: 72,
+                  width: '100%',
+                  height: '100%',
                   objectFit: 'cover',
                   borderRadius: 8,
-                  border: `1px solid ${theme.border}`
+                  border: `1px solid ${theme.border}`,
                 }}
               />
-              {/* 🔥 delete photo button */}
               <button
                 type="button"
-                onClick={() => removePhoto(i)}
+                onClick={() => setPhotos((prev) => prev.filter((_, idx2) => idx2 !== i))}
                 title="Remove photo"
                 style={{
                   position: 'absolute',
@@ -1186,11 +1235,12 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
                   width: 22,
                   height: 22,
                   borderRadius: '50%',
-                  border: '0',
+                  border: `1px solid ${theme.border}`,
                   background: '#fff',
-                  boxShadow: '0 0 0 1px #ccc',
                   cursor: 'pointer',
-                  fontWeight: 800
+                  fontWeight: 800,
+                  lineHeight: '20px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
                 }}
               >
                 ×
@@ -1199,6 +1249,7 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
           ))}
         </div>
       </div>
+
       <div style={{ display: 'flex', gap: 8 }}>
         <button style={btnStyle}>Save Repair</button>
       </div>
@@ -1210,7 +1261,7 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
 function Dashboard({
   intakes,
   repairs,
-  onViewSerial
+  onViewSerial,
 }: {
   intakes: Intake[];
   repairs: Repair[];
@@ -1218,6 +1269,7 @@ function Dashboard({
 }) {
   const todayStr = new Date().toDateString();
   const processedToday = intakes.filter((i) => new Date(i.createdAt).toDateString() === todayStr).length;
+
   const bySerialRepairs = repairs.reduce<Record<string, Repair[]>>((acc, r) => {
     (acc[r.serial] ||= []).push(r);
     return acc;
@@ -1225,10 +1277,12 @@ function Dashboard({
   const repeatRepairs30d = Object.values(bySerialRepairs).filter(
     (arr) => arr.filter((r) => Date.now() - new Date(r.startAt).getTime() <= 30 * 24 * 3600 * 1000).length > 1
   ).length;
+
   const last30 = repairs.filter((r) => Date.now() - new Date(r.startAt).getTime() <= 30 * 24 * 3600 * 1000);
   const repaired = last30.filter((r) => r.disposition === 'Repaired').length;
   const scrapped = last30.filter((r) => r.disposition === 'Scrap').length;
   const yieldPct = repaired + scrapped ? Math.round((repaired / (repaired + scrapped)) * 100) : 0;
+
   const openHolds = intakes.filter(
     (v) =>
       v.checklist.labels_match === 'Fail' ||
@@ -1260,18 +1314,23 @@ function Dashboard({
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <div style={{ fontSize: 20, fontWeight: 600 }}>Repair Dashboard</div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 12 }}>
         <KpiCard label="Processed Today" value={processedToday} />
         <KpiCard label="Repair Yield (30d)" value={`${yieldPct}%`} />
         <KpiCard label="Open Holds" value={openHolds} />
         <KpiCard label="Repeat Repairs (30d)" value={repeatRepairs30d} />
       </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={card}>
           <div style={{ fontWeight: 600, marginBottom: 8 }}>7-Day Throughput</div>
           <div style={{ display: 'grid', gap: 8 }}>
             {days.map((d) => (
-              <div key={d.label} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 40px', alignItems: 'center', gap: 8 }}>
+              <div
+                key={d.label}
+                style={{ display: 'grid', gridTemplateColumns: '80px 1fr 40px', alignItems: 'center', gap: 8 }}
+              >
                 <div style={{ fontSize: 12, color: theme.subtext }}>{d.label}</div>
                 {smallBar(d.count, maxCount)}
                 <div style={{ textAlign: 'right', fontSize: 12 }}>{d.count}</div>
@@ -1279,6 +1338,7 @@ function Dashboard({
             ))}
           </div>
         </div>
+
         <div style={card}>
           <div style={{ fontWeight: 600, marginBottom: 8 }}>Top Fail Codes (30d)</div>
           {pareto.length === 0 ? (
@@ -1321,7 +1381,9 @@ function Dashboard({
                     <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{r.failureCode}</td>
                     <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{r.actions.join(', ')}</td>
                     <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{r.disposition}</td>
-                    <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{new Date(r.startAt).toLocaleString()}</td>
+                    <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>
+                      {new Date(r.startAt).toLocaleString()}
+                    </td>
                     <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>
                       <button style={btnGhost} onClick={() => onViewSerial(r.serial)}>
                         View
@@ -1338,10 +1400,12 @@ function Dashboard({
 }
 
 // ===== History (lookup, view, export) =====
+type HistoryRow = { type: 'intake' | 'repair'; when: string; data: Intake | Repair };
+
 function History({
   intakes,
   repairs,
-  initialSerial
+  initialSerial,
 }: {
   intakes: Intake[];
   repairs: Repair[];
@@ -1351,18 +1415,18 @@ function History({
   const [selected, setSelected] = useState<any | null>(null);
   const [showCombined, setShowCombined] = useState(false);
 
-  type Row = { type: 'intake' | 'repair'; when: string; data: Intake | Repair };
-
-  const list = useMemo<Row[]>(() => {
+  const list: HistoryRow[] = useMemo(() => {
     const serial = q.trim();
     if (!serial) return [];
-    const a: Row[] = intakes
+    const a: HistoryRow[] = intakes
       .filter((i) => i.serial === serial)
       .map((i) => ({ type: 'intake', when: i.createdAt, data: i }));
-    const b: Row[] = repairs
+    const b: HistoryRow[] = repairs
       .filter((r) => r.serial === serial)
       .map((r) => ({ type: 'repair', when: r.startAt, data: r }));
-    return ([] as Row[]).concat(a as Row[]).concat(b as Row[]).sort((x, y) => new Date(x.when).getTime() - new Date(y.when).getTime());
+    return [...a, ...b].sort(
+      (x, y) => new Date(x.when).getTime() - new Date(y.when).getTime()
+    );
   }, [q, intakes, repairs]);
 
   const combinedRec: CombinedRecord | null = useMemo(() => {
@@ -1387,7 +1451,6 @@ function History({
         source: i.returnSource,
         reason: i.returnReason,
         createdAt: i.createdAt,
-        notes: i.notes || ''
       })
     );
     repairs.forEach((r) =>
@@ -1399,17 +1462,15 @@ function History({
         disposition: r.disposition,
         startAt: r.startAt,
         endAt: r.endAt || '',
-        notes: r.notes || ''
       })
     );
     downloadCSV('repairs_history.csv', rows);
   }
 
-  const preview = (t?: string) => (t ? (t.length > 120 ? t.slice(0, 120) + '…' : t) : '');
-
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <div style={{ fontSize: 20, fontWeight: 600 }}>History Lookup</div>
+
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           style={{ ...fieldStyle, maxWidth: 360 }}
@@ -1462,7 +1523,9 @@ function History({
         </div>
       )}
 
-      {q && list.length === 0 && <div style={{ fontSize: 12, color: theme.subtext }}>No records for this serial.</div>}
+      {q && list.length === 0 && (
+        <div style={{ fontSize: 12, color: theme.subtext }}>No records for this serial.</div>
+      )}
 
       <div style={{ display: 'grid', gap: 8 }}>
         {list.map((row, idx) => (
@@ -1471,7 +1534,9 @@ function History({
               <div>
                 <span style={chip}>{row.type.toUpperCase()}</span>
               </div>
-              <div style={{ fontSize: 12, color: theme.subtext }}>{new Date(row.when).toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: theme.subtext }}>
+                {new Date(row.when).toLocaleString()}
+              </div>
             </div>
 
             {row.type === 'intake' ? (
@@ -1480,15 +1545,17 @@ function History({
                   <b>Serial:</b> {(row.data as Intake).serial}
                 </div>
                 <div>
-                  <b>Family/Model:</b> {(row.data as Intake).family} / {(row.data as Intake).model} — {(row.data as Intake).sizeIn}"
+                  <b>Family/Model:</b> {(row.data as Intake).family} /{' '}
+                  {(row.data as Intake).model} — {(row.data as Intake).sizeIn}"
                 </div>
                 <div>
-                  <b>Return:</b> {(row.data as Intake).returnSource} – {(row.data as Intake).returnReason}
+                  <b>Return:</b> {(row.data as Intake).returnSource} –{' '}
+                  {(row.data as Intake).returnReason}
                 </div>
-                {/* 🔥 notes preview in list */}
                 {(row.data as Intake).notes ? (
-                  <div style={{ marginTop: 4, color: theme.subtext }}>
-                    <b>Notes:</b> {preview((row.data as Intake).notes)}
+                  <div style={{ marginTop: 4, fontSize: 12, color: theme.subtext }}>
+                    {String((row.data as Intake).notes).slice(0, 120)}
+                    {String((row.data as Intake).notes).length > 120 ? '…' : ''}
                   </div>
                 ) : null}
                 <div style={{ marginTop: 8 }}>
@@ -1509,15 +1576,16 @@ function History({
                   <b>Serial:</b> {(row.data as Repair).serial}
                 </div>
                 <div>
-                  <b>Failure/Disp:</b> {(row.data as Repair).failureCode} / {(row.data as Repair).disposition}
+                  <b>Failure/Disp:</b> {(row.data as Repair).failureCode} /{' '}
+                  {(row.data as Repair).disposition}
                 </div>
                 <div>
                   <b>Actions:</b> {(row.data as Repair).actions.join(', ')}
                 </div>
-                {/* 🔥 notes preview in list */}
                 {(row.data as Repair).notes ? (
-                  <div style={{ marginTop: 4, color: theme.subtext }}>
-                    <b>Notes:</b> {preview((row.data as Repair).notes)}
+                  <div style={{ marginTop: 4, fontSize: 12, color: theme.subtext }}>
+                    {String((row.data as Repair).notes).slice(0, 120)}
+                    {String((row.data as Repair).notes).length > 120 ? '…' : ''}
                   </div>
                 ) : null}
                 <div style={{ marginTop: 8 }}>
@@ -1545,7 +1613,7 @@ function AdminPanel({
   sizes,
   sources,
   reasons,
-  onSave
+  onSave,
 }: {
   sizes: number[];
   sources: string[];
@@ -1573,7 +1641,10 @@ function AdminPanel({
       .filter((n) => !isNaN(n));
   }
   function parseList(t: string) {
-    return t.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+    return t
+      .split(/\n+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
   function save() {
     onSave(parseSizes(szText), parseList(srcText), parseList(reaText));
@@ -1585,7 +1656,12 @@ function AdminPanel({
       <div style={card}>
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Admin Access</div>
         <p style={{ fontSize: 13, color: theme.subtext }}>Enter pass key to unlock settings:</p>
-        <input style={fieldStyle} type="password" value={inputKey} onChange={(e) => setInputKey(e.target.value)} />
+        <input
+          style={fieldStyle}
+          type="password"
+          value={inputKey}
+          onChange={(e) => setInputKey(e.target.value)}
+        />
         <button style={btnStyle} onClick={checkKey}>
           Enter
         </button>
@@ -1678,20 +1754,32 @@ export default function App() {
           position: 'sticky',
           top: 0,
           background: `linear-gradient(90deg,${theme.primaryDark},${theme.primary})`,
-          borderBottom: `1px solid ${theme.border}`
+          borderBottom: `1px solid ${theme.border}`,
         }}
       >
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: 12, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          {/* 🔥 Creator watermark + Title */}
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: '0 auto',
+            padding: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Creator watermark + Title */}
           <div style={{ display: 'flex', flexDirection: 'column', minWidth: 240 }}>
-            <div style={{ fontSize: 11, color: 'white', opacity: 0.85, fontWeight: 600 }}>Creator: Edgar Garcia</div>
+            <div style={{ fontSize: 11, color: 'white', opacity: 0.85, fontWeight: 600 }}>
+              Creator: Edgar Garcia
+            </div>
             <div
               style={{
                 fontWeight: 800,
                 letterSpacing: 0.3,
                 color: 'white',
                 fontSize: 20,
-                textShadow: '1px 1px 2px #000'
+                textShadow: '1px 1px 2px #000',
               }}
             >
               ROKU 1PTV Repair
@@ -1700,7 +1788,11 @@ export default function App() {
 
           <nav style={{ display: 'flex', gap: 8, fontSize: 14, flexWrap: 'wrap' }}>
             {(['intake', 'repair', 'dashboard', 'history', 'admin'] as const).map((t) => (
-              <button key={t} onClick={() => setTab(t)} style={{ ...btnStyle, background: tab === t ? theme.primaryDark : theme.primary }}>
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                style={{ ...btnStyle, background: tab === t ? theme.primaryDark : theme.primary }}
+              >
                 {t[0].toUpperCase() + t.slice(1)}
               </button>
             ))}
@@ -1709,13 +1801,33 @@ export default function App() {
       </header>
 
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: 16 }}>
-        {tab === 'intake' && <IntakeForm sizes={sizes} sources={sources} reasons={reasons} onSaved={(i) => setIntakes((prev) => [...prev, i])} />}
+        {tab === 'intake' && (
+          <IntakeForm
+            sizes={sizes}
+            sources={sources}
+            reasons={reasons}
+            onSaved={(i) => setIntakes((prev) => [...prev, i])}
+          />
+        )}
 
-        {tab === 'repair' && <RepairForm serials={serials} onSaved={(r) => setRepairs((prev) => [...prev, r])} />}
+        {tab === 'repair' && (
+          <RepairForm serials={serials} onSaved={(r) => setRepairs((prev) => [...prev, r])} />
+        )}
 
-        {tab === 'dashboard' && <Dashboard intakes={intakes} repairs={repairs} onViewSerial={(sn) => { setHistorySerial(sn); setTab('history'); }} />}
+        {tab === 'dashboard' && (
+          <Dashboard
+            intakes={intakes}
+            repairs={repairs}
+            onViewSerial={(sn) => {
+              setHistorySerial(sn);
+              setTab('history');
+            }}
+          />
+        )}
 
-        {tab === 'history' && <History intakes={intakes} repairs={repairs} initialSerial={historySerial} />}
+        {tab === 'history' && (
+          <History intakes={intakes} repairs={repairs} initialSerial={historySerial} />
+        )}
 
         {tab === 'admin' && (
           <AdminPanel
@@ -1733,6 +1845,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
