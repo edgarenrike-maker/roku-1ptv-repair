@@ -24,26 +24,23 @@ const theme = {
   text: '#111111',
   subtext: '#555555',
   border: '#CCCCCC',
-  chipBg: '#E0D9EF',
+  chipBg: '#E0D9EF'
 } as const;
 const baseFont: React.CSSProperties = {
   fontFamily:
-    'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Roku Sans", sans-serif',
+    'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Roku Sans", sans-serif'
 };
 
-// Layout-safe fields (prevents overflow)
 const fieldStyle: React.CSSProperties = {
-  boxSizing: 'border-box',
   display: 'block',
   width: '100%',
-  maxWidth: '100%',
   padding: '10px 12px',
   margin: '4px 0 12px',
   borderRadius: 10,
   border: `1px solid ${theme.border}`,
   background: '#FFF',
   color: theme.text,
-  ...baseFont,
+  ...baseFont
 };
 const btnStyle: React.CSSProperties = {
   background: theme.primary,
@@ -56,7 +53,7 @@ const btnStyle: React.CSSProperties = {
   boxShadow: '0 3px 0 #4E1180',
   transform: 'translateY(0)',
   transition: 'transform 0.1s, box-shadow 0.1s',
-  ...baseFont,
+  ...baseFont
 };
 const btnGhost: React.CSSProperties = {
   background: '#fff',
@@ -67,16 +64,14 @@ const btnGhost: React.CSSProperties = {
   cursor: 'pointer',
   fontWeight: 800,
   boxShadow: '0 2px 0 #ddd',
-  ...baseFont,
+  ...baseFont
 };
-// Card masks children (no bleed outside rounded corners)
 const card: React.CSSProperties = {
   background: theme.card,
   border: `1px solid ${theme.border}`,
   borderRadius: 16,
   padding: 16,
-  overflow: 'hidden',
-  ...baseFont,
+  ...baseFont
 };
 const chip: React.CSSProperties = {
   padding: '2px 8px',
@@ -84,7 +79,7 @@ const chip: React.CSSProperties = {
   background: theme.chipBg,
   fontSize: 12,
   color: theme.text,
-  ...baseFont,
+  ...baseFont
 };
 
 // ===== Runtime guard =====
@@ -140,7 +135,7 @@ type CombinedRecord = { serial: string; intake?: Intake; repairs: Repair[] };
 
 // ===== Defaults =====
 const DEFAULT_TV_SIZES: number[] = [
-  24, 28, 32, 39, 40, 42, 43, 48, 49, 50, 55, 58, 60, 65, 70, 75, 77, 82, 83, 85, 86, 98,
+  24, 28, 32, 39, 40, 42, 43, 48, 49, 50, 55, 58, 60, 65, 70, 75, 77, 82, 83, 85, 86, 98
 ];
 const DEFAULT_RETURN_SOURCE_SUGGESTIONS = [
   'Retail Return – Best Buy',
@@ -150,7 +145,7 @@ const DEFAULT_RETURN_SOURCE_SUGGESTIONS = [
   'Direct RMA',
   'Rev-Log',
   'TPV Service',
-  'Other',
+  'Other'
 ];
 const DEFAULT_RETURN_REASON_SUGGESTIONS = [
   'No power',
@@ -165,7 +160,7 @@ const DEFAULT_RETURN_REASON_SUGGESTIONS = [
   'Cosmetic damage',
   'Remote missing',
   'Stand missing',
-  'Other',
+  'Other'
 ];
 const FAILURE_CODES = [
   'PSU_NO_POWER',
@@ -176,7 +171,7 @@ const FAILURE_CODES = [
   'WIFI_WEAK',
   'HDMI_FAIL',
   'AUDIO_NO_SOUND',
-  'OTHER',
+  'OTHER'
 ];
 const ACTION_CODES = [
   'RESEAT_FFC',
@@ -186,7 +181,7 @@ const ACTION_CODES = [
   'REPLACE_TCON',
   'FW_REFLASH',
   'CLEAN_CONNECTOR',
-  'REWORK_SOLDER',
+  'REWORK_SOLDER'
 ];
 
 // ===== Criteria text =====
@@ -196,61 +191,76 @@ const CRITERIA: Record<string, { title: string; bullets: string[] }> = {
     bullets: [
       'Carton/rear/RMA match model/size/market; serial readable.',
       'Regulatory marks present (UL/FCC/ICES/RCM).',
-      'Mismatch → Conditional; missing/altered → Fail.',
-    ],
+      'Mismatch → Conditional; missing/altered → Fail.'
+    ]
   },
   safety_ok: {
     title: 'Safety',
     bullets: [
       'Cord insulation intact; ground prong present.',
       'Rear cover fully seated; EMI shields in place.',
-      'Any safety defect → Fail.',
-    ],
+      'Any safety defect → Fail.'
+    ]
   },
   ports_intact: {
     title: 'Ports',
-    bullets: ['HDMI/USB/Coax/Optical aligned; no bent pins.', 'Minor scuff → Conditional; cracked/bent → Fail.'],
+    bullets: [
+      'HDMI/USB/Coax/Optical aligned; no bent pins.',
+      'Minor scuff → Conditional; cracked/bent → Fail.'
+    ]
   },
   power_symptom: {
     title: 'Power symptom',
-    bullets: ['Reproduce symptom; log LED/boot code if any.', 'Not reproducible after 2 cycles → N/A note.'],
+    bullets: [
+      'Reproduce symptom; log LED/boot code if any.',
+      'Not reproducible after 2 cycles → N/A note.'
+    ]
   },
   esd_ok: {
     title: 'ESD setup',
-    bullets: ['Wrist strap verified; mat ground <10MΩ.', 'Any breach → Fail.'],
+    bullets: ['Wrist strap verified; mat ground <10MΩ.', 'Any breach → Fail.']
   },
   cosmetic_backcover: {
     title: 'Cosmetic – Back cover',
-    bullets: ['No cracks/dents; tabs not broken.', 'Scratch ≤30mm → Conditional; cracks/gouges → Fail.'],
+    bullets: [
+      'No cracks/dents; tabs not broken.',
+      'Scratch ≤30mm → Conditional; cracks/gouges → Fail.'
+    ]
   },
   cosmetic_screen: {
     title: 'Cosmetic – Screen',
-    bullets: ['No cracks, lines, pressure mura.', 'Hairline scratch ≤10mm outside AA → Conditional.'],
+    bullets: [
+      'No cracks, lines, pressure mura.',
+      'Hairline scratch ≤10mm outside AA → Conditional.'
+    ]
   },
   cosmetic_bezel: {
     title: 'Cosmetic – Bezel',
-    bullets: ['No cracks/chips; light scuffs okay.', 'Gaps >1.5mm/deformation → Fail.'],
+    bullets: ['No cracks/chips; light scuffs okay.', 'Gaps >1.5mm/deformation → Fail.']
   },
   cosmetic_base: {
     title: 'Cosmetic – Base/Stand',
-    bullets: ['Stable; no cracks; scuffs okay → Conditional.', 'Structural damage → Fail.'],
+    bullets: ['Stable; no cracks; scuffs okay → Conditional.', 'Structural damage → Fail.']
   },
   accessory_remote: {
     title: 'Accessory – Remote',
-    bullets: ['Correct model; housing intact; battery door present.', 'Missing → Fail; wrong model → Conditional.'],
+    bullets: [
+      'Correct model; housing intact; battery door present.',
+      'Missing → Fail; wrong model → Conditional.'
+    ]
   },
   accessory_stand: {
     title: 'Accessory – Stand parts',
-    bullets: ['All legs/feet/trims present; fits firmly.', 'Missing structural piece → Fail.'],
+    bullets: ['All legs/feet/trims present; fits firmly.', 'Missing structural piece → Fail.']
   },
   accessory_powercord: {
     title: 'Accessory – Power cord',
-    bullets: ['OEM spec; no cuts; strain relief OK.', 'Non-OEM but compatible → Conditional; damage → Fail.'],
+    bullets: ['OEM spec; no cuts; strain relief OK.', 'Non-OEM but compatible → Conditional; damage → Fail.']
   },
   accessory_screws: {
     title: 'Accessory – Screws',
-    bullets: ['Correct count/thread; heads not stripped.', 'Missing critical screw(s) → Fail.'],
-  },
+    bullets: ['Correct count/thread; heads not stripped.', 'Missing critical screw(s) → Fail.']
+  }
 };
 
 // ===== IndexedDB Hook =====
@@ -467,7 +477,7 @@ function UiSelect({
   onChange,
   placeholder,
   options,
-  required,
+  required
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -483,7 +493,11 @@ function UiSelect({
       onChange={(e) => onChange(e.target.value)}
       required={required}
     >
-      {placeholder ? <option value="" disabled>{placeholder}</option> : null}
+      {placeholder ? (
+        <option value="" disabled>
+          {placeholder}
+        </option>
+      ) : null}
       {options.map((opt) => (
         <option key={opt} value={opt}>
           {opt}
@@ -498,7 +512,7 @@ function UiCombo({
   setValue,
   options,
   placeholder,
-  allowCustomLabel = 'Custom…',
+  allowCustomLabel = 'Custom…'
 }: {
   value: string;
   setValue: (v: string) => void;
@@ -524,7 +538,11 @@ function UiCombo({
   return (
     <div>
       <select style={fieldStyle} value={selectVal} onChange={(e) => onSelect(e.target.value)}>
-        {placeholder ? <option value="" disabled>{placeholder}</option> : null}
+        {placeholder ? (
+          <option value="" disabled>
+            {placeholder}
+          </option>
+        ) : null}
         {options.map((opt) => (
           <option key={opt} value={opt}>
             {opt}
@@ -532,7 +550,14 @@ function UiCombo({
         ))}
         <option value={CUSTOM}>{allowCustomLabel}</option>
       </select>
-      {isCustom && <input style={fieldStyle} value={value} onChange={(e) => setValue(e.target.value)} placeholder="Type custom value" />}
+      {isCustom && (
+        <input
+          style={fieldStyle}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Type custom value"
+        />
+      )}
     </div>
   );
 }
@@ -542,7 +567,7 @@ function UiMultiCombo({
   value,
   setValue,
   options,
-  placeholder = 'Select actions…',
+  placeholder = 'Select actions…'
 }: {
   value: string[];
   setValue: (v: string[]) => void;
@@ -646,20 +671,13 @@ function PhotoPicker({ onPick }: { onPick: (dataUrl: string) => void }) {
   return <input type="file" accept="image/*" onChange={onChange} />;
 }
 
-// Pretty record viewers
 function RecordViewer({ record }: { record: any }) {
   if (isIntakeRecord(record)) {
     const i = record as Intake;
     return (
       <div>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Intake</div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 8,
-          }}
-        >
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <div>
             <b>Serial:</b> {i.serial}
           </div>
@@ -687,25 +705,7 @@ function RecordViewer({ record }: { record: any }) {
             </div>
           ) : null}
         </div>
-        <div style={{ marginTop: 12 }}>
-          <div style={{ fontWeight: 600, marginBottom: 6 }}>Checklist</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left', padding: 6 }}>Item</th>
-                <th style={{ textAlign: 'left', padding: 6 }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(i.checklist).map(([k, v]) => (
-                <tr key={k}>
-                  <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{k.replace(/_/g, ' ')}</td>
-                  <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{v}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {/* 🔥 Show Intake Notes in viewer */}
         {i.notes ? (
           <div style={{ marginTop: 12 }}>
             <b>Notes:</b> {i.notes}
@@ -734,13 +734,7 @@ function RecordViewer({ record }: { record: any }) {
     return (
       <div>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Repair</div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 8,
-          }}
-        >
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <div>
             <b>Serial:</b> {r.serial}
           </div>
@@ -767,6 +761,7 @@ function RecordViewer({ record }: { record: any }) {
             </div>
           ) : null}
         </div>
+        {/* 🔥 Show Repair Notes in viewer */}
         {r.notes ? (
           <div style={{ marginTop: 12 }}>
             <b>Notes:</b> {r.notes}
@@ -805,18 +800,18 @@ function CombinedViewer({ rec }: { rec: CombinedRecord }) {
         <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>No intake record stored for this serial.</div>
       )}
 
-      {rec.repairs.length ? (
-        rec.repairs
-          .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
-          .map((r, idx) => (
-            <div key={idx} style={card}>
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>Repair #{idx + 1}</div>
-              <RecordViewer record={r} />
-            </div>
-          ))
-      ) : (
-        <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>No repairs recorded yet.</div>
-      )}
+      {rec.repairs.length
+        ? rec.repairs
+            .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
+            .map((r, idx) => (
+              <div key={idx} style={card}>
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>Repair #{idx + 1}</div>
+                <RecordViewer record={r} />
+              </div>
+            ))
+        : (
+          <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>No repairs recorded yet.</div>
+          )}
     </div>
   );
 }
@@ -826,7 +821,7 @@ function IntakeForm({
   onSaved,
   sizes,
   sources,
-  reasons,
+  reasons
 }: {
   onSaved: (intake: Intake) => void;
   sizes: number[];
@@ -856,17 +851,20 @@ function IntakeForm({
       accessory_remote: 'Pass',
       accessory_stand: 'Pass',
       accessory_powercord: 'Pass',
-      accessory_screws: 'Pass',
+      accessory_screws: 'Pass'
     },
     photos: [],
-    createdAt: new Date().toISOString(),
+    createdAt: new Date().toISOString()
   });
   const [openHelp, setOpenHelp] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const toggleHelp = (k: string) => setOpenHelp((prev) => ({ ...prev, [k]: !prev[k] }));
-  const set = <K extends keyof Intake>(k: K, val: Intake[K]) => setV((prev) => ({ ...prev, [k]: val }));
-  const setC = <K extends keyof Intake['checklist']>(k: K, val: Intake['checklist'][K]) =>
-    setV((prev) => ({ ...prev, checklist: { ...prev.checklist, [k]: val } }));
+  const set = <K extends keyof Intake>(k: K, val: Intake[K]) =>
+    setV((prev) => ({ ...prev, [k]: val }));
+  const setC = <K extends keyof Intake['checklist']>(
+    k: K,
+    val: Intake['checklist'][K]
+  ) => setV((prev) => ({ ...prev, checklist: { ...prev.checklist, [k]: val } }));
 
   const blockers =
     v.checklist.labels_match === 'Fail' ||
@@ -874,6 +872,10 @@ function IntakeForm({
     v.checklist.ports_intact === 'Fail' ||
     v.checklist.power_symptom === 'Fail' ||
     v.checklist.esd_ok === 'Fail';
+
+  function removePhoto(idx: number) {
+    setV((prev) => ({ ...prev, photos: prev.photos.filter((_, i) => i !== idx) }));
+  }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -892,7 +894,7 @@ function IntakeForm({
         returnReason: '',
         conditionIn: '',
         notes: '',
-        photos: [],
+        photos: []
       });
     } finally {
       setSaving(false);
@@ -912,7 +914,7 @@ function IntakeForm({
     ['accessory_remote', 'Accessory – Remote'],
     ['accessory_stand', 'Accessory – Stand parts'],
     ['accessory_powercord', 'Accessory – Power cord'],
-    ['accessory_screws', 'Accessory – Screws'],
+    ['accessory_screws', 'Accessory – Screws']
   ] as const;
 
   return (
@@ -921,6 +923,7 @@ function IntakeForm({
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Identification</div>
         <label style={{ fontSize: 12, color: theme.subtext }}>Serial Number</label>
         <input style={fieldStyle} value={v.serial} onChange={(e) => set('serial', e.target.value)} required />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Family</label>
         <input
           style={fieldStyle}
@@ -929,8 +932,10 @@ function IntakeForm({
           placeholder="Enter Family (e.g., Abilene, Burton, Proper…)"
           required
         />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Model</label>
         <input style={fieldStyle} value={v.model} onChange={(e) => set('model', e.target.value)} required />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Size (in)</label>
         <UiSelect
           value={String(v.sizeIn)}
@@ -939,14 +944,40 @@ function IntakeForm({
           options={sizes.map((s) => String(s))}
           required
         />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>MAC (optional)</label>
-        <input style={fieldStyle} value={v.mac} onChange={(e) => set('mac', e.target.value)} placeholder="e.g., AA:BB:CC:DD:EE:FF" />
+        <input
+          style={fieldStyle}
+          value={v.mac}
+          onChange={(e) => set('mac', e.target.value)}
+          placeholder="e.g., AA:BB:CC:DD:EE:FF"
+        />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Return Source</label>
-        <UiCombo value={v.returnSource} setValue={(val) => set('returnSource', val)} options={sources} placeholder="Select return source…" />
+        <UiCombo
+          value={v.returnSource}
+          setValue={(val) => set('returnSource', val)}
+          options={sources}
+          placeholder="Select return source…"
+        />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Return Reason</label>
-        <UiCombo value={v.returnReason} setValue={(val) => set('returnReason', val)} options={reasons} placeholder="Select return reason…" />
+        <UiCombo
+          value={v.returnReason}
+          setValue={(val) => set('returnReason', val)}
+          options={reasons}
+          placeholder="Select return reason…"
+        />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Incoming Condition</label>
-        <UiSelect value={v.conditionIn} onChange={(val) => set('conditionIn', val)} placeholder="Incoming Condition…" options={['OK', 'Minor cosmetic', 'Major cosmetic', 'Functional fail', 'Unknown']} required />
+        <UiSelect
+          value={v.conditionIn}
+          onChange={(val) => set('conditionIn', val)}
+          placeholder="Incoming Condition…"
+          options={['OK', 'Minor cosmetic', 'Major cosmetic', 'Functional fail', 'Unknown']}
+          required
+        />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Notes</label>
         <textarea style={{ ...fieldStyle, height: 80 }} value={v.notes} onChange={(e) => set('notes', e.target.value)} />
       </div>
@@ -957,13 +988,29 @@ function IntakeForm({
           <div key={k} style={{ marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 260, fontSize: 12, color: theme.text }}>{label}</div>
-              <UiSelect value={String(v.checklist[k])} onChange={(val) => setC(k as any, val as any)} options={['Pass', 'Conditional', 'Fail', 'N/A']} />
-              <button type="button" onClick={() => toggleHelp(k)} style={{ ...btnGhost, padding: '4px 8px' }}>
+              <UiSelect
+                value={String(v.checklist[k])}
+                onChange={(val) => setC(k as any, val as any)}
+                options={['Pass', 'Conditional', 'Fail', 'N/A']}
+              />
+              <button
+                type="button"
+                onClick={() => toggleHelp(k)}
+                style={{ ...btnGhost, padding: '4px 8px' }}
+              >
                 {openHelp[k] ? 'Hide criteria' : 'View criteria'}
               </button>
             </div>
             {openHelp[k] && (
-              <div style={{ marginTop: 6, background: '#FFF', border: `1px dashed ${theme.border}`, padding: 8, borderRadius: 8 }}>
+              <div
+                style={{
+                  marginTop: 6,
+                  background: '#FFF',
+                  border: `1px dashed ${theme.border}`,
+                  padding: 8,
+                  borderRadius: 8
+                }}
+              >
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>{CRITERIA[k]?.title || label}</div>
                 <ul style={{ margin: 0, paddingLeft: 18 }}>
                   {(CRITERIA[k]?.bullets || ['Define criteria']).map((b, i) => (
@@ -976,23 +1023,62 @@ function IntakeForm({
             )}
           </div>
         ))}
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontWeight: 600 }}>Photos</div>
           <div style={{ fontSize: 12, color: theme.subtext }}>{v.photos.length}</div>
         </div>
+
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
           <PhotoPicker onPick={(d) => setV((prev) => ({ ...prev, photos: [...prev.photos, d] }))} />
           {v.photos.map((p, i) => (
-            <img key={i} src={p} alt={`p${i}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: `1px solid ${theme.border}` }} />
+            <div key={i} style={{ position: 'relative' }}>
+              <img
+                src={p}
+                alt={`p${i}`}
+                style={{
+                  width: 72,
+                  height: 72,
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`
+                }}
+              />
+              {/* 🔥 delete photo button */}
+              <button
+                type="button"
+                onClick={() => removePhoto(i)}
+                title="Remove photo"
+                style={{
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  border: '0',
+                  background: '#fff',
+                  boxShadow: '0 0 0 1px #ccc',
+                  cursor: 'pointer',
+                  fontWeight: 800
+                }}
+              >
+                ×
+              </button>
+            </div>
           ))}
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8 }}>
         <button disabled={saving} style={btnStyle}>
           {saving ? 'Saving…' : 'Save Intake & Continue'}
         </button>
-        {blockers && <span style={{ fontSize: 12, color: '#c00', alignSelf: 'center' }}>Repair will be blocked (Hold – QE Review)</span>}
+        {blockers && (
+          <span style={{ fontSize: 12, color: '#c00', alignSelf: 'center' }}>
+            Repair will be blocked (Hold – QE Review)
+          </span>
+        )}
       </div>
     </form>
   );
@@ -1010,6 +1096,10 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
   const [notes, setNotes] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
 
+  function removePhoto(idx: number) {
+    setPhotos((prev) => prev.filter((_, i) => i !== idx));
+  }
+
   function save(e: React.FormEvent) {
     e.preventDefault();
     if (!serial) return alert('Serial is required');
@@ -1022,7 +1112,7 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
       actions,
       disposition,
       notes: notes || undefined,
-      photos,
+      photos
     });
     setSerial('');
     setStartAt(new Date().toISOString().slice(0, 16));
@@ -1041,13 +1131,7 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Repair – Identification</div>
         <label style={{ fontSize: 12, color: theme.subtext }}>Serial</label>
         <UiCombo value={serial} setValue={setSerial} options={serials} placeholder="Select or type serial…" />
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 8,
-          }}
-        >
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <div>
             <label style={{ fontSize: 12, color: theme.subtext }}>Start</label>
             <input type="datetime-local" style={fieldStyle} value={startAt} onChange={(e) => setStartAt(e.target.value)} />
@@ -1078,7 +1162,40 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
           <PhotoPicker onPick={(d) => setPhotos((prev) => [...prev, d])} />
           {photos.map((p, i) => (
-            <img key={i} src={p} alt={`r${i}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: `1px solid ${theme.border}` }} />
+            <div key={i} style={{ position: 'relative' }}>
+              <img
+                src={p}
+                alt={`r${i}`}
+                style={{
+                  width: 72,
+                  height: 72,
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`
+                }}
+              />
+              {/* 🔥 delete photo button */}
+              <button
+                type="button"
+                onClick={() => removePhoto(i)}
+                title="Remove photo"
+                style={{
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  border: '0',
+                  background: '#fff',
+                  boxShadow: '0 0 0 1px #ccc',
+                  cursor: 'pointer',
+                  fontWeight: 800
+                }}
+              >
+                ×
+              </button>
+            </div>
           ))}
         </div>
       </div>
@@ -1090,7 +1207,15 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
 }
 
 // ===== Dashboard =====
-function Dashboard({ intakes, repairs, onViewSerial }: { intakes: Intake[]; repairs: Repair[]; onViewSerial: (serial: string) => void }) {
+function Dashboard({
+  intakes,
+  repairs,
+  onViewSerial
+}: {
+  intakes: Intake[];
+  repairs: Repair[];
+  onViewSerial: (serial: string) => void;
+}) {
   const todayStr = new Date().toDateString();
   const processedToday = intakes.filter((i) => new Date(i.createdAt).toDateString() === todayStr).length;
   const bySerialRepairs = repairs.reduce<Record<string, Repair[]>>((acc, r) => {
@@ -1098,7 +1223,7 @@ function Dashboard({ intakes, repairs, onViewSerial }: { intakes: Intake[]; repa
     return acc;
   }, {});
   const repeatRepairs30d = Object.values(bySerialRepairs).filter(
-    (arr) => arr.filter((r) => Date.now() - new Date(r.startAt).getTime() <= 30 * 24 * 3600 * 1000).length > 1,
+    (arr) => arr.filter((r) => Date.now() - new Date(r.startAt).getTime() <= 30 * 24 * 3600 * 1000).length > 1
   ).length;
   const last30 = repairs.filter((r) => Date.now() - new Date(r.startAt).getTime() <= 30 * 24 * 3600 * 1000);
   const repaired = last30.filter((r) => r.disposition === 'Repaired').length;
@@ -1110,7 +1235,7 @@ function Dashboard({ intakes, repairs, onViewSerial }: { intakes: Intake[]; repa
       v.checklist.safety_ok === 'Fail' ||
       v.checklist.ports_intact === 'Fail' ||
       v.checklist.power_symptom === 'Fail' ||
-      v.checklist.esd_ok === 'Fail',
+      v.checklist.esd_ok === 'Fail'
   ).length;
 
   const days = [...Array(7)].map((_, d) => {
@@ -1128,30 +1253,20 @@ function Dashboard({ intakes, repairs, onViewSerial }: { intakes: Intake[]; repa
   last30.forEach((r) => {
     failCount[r.failureCode] = (failCount[r.failureCode] || 0) + 1;
   });
-  const pareto = Object.entries(failCount).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const pareto = Object.entries(failCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <div style={{ fontSize: 20, fontWeight: 600 }}>Repair Dashboard</div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 12,
-        }}
-      >
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 12 }}>
         <KpiCard label="Processed Today" value={processedToday} />
         <KpiCard label="Repair Yield (30d)" value={`${yieldPct}%`} />
         <KpiCard label="Open Holds" value={openHolds} />
         <KpiCard label="Repeat Repairs (30d)" value={repeatRepairs30d} />
       </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: 12,
-        }}
-      >
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={card}>
           <div style={{ fontWeight: 600, marginBottom: 8 }}>7-Day Throughput</div>
           <div style={{ display: 'grid', gap: 8 }}>
@@ -1223,23 +1338,31 @@ function Dashboard({ intakes, repairs, onViewSerial }: { intakes: Intake[]; repa
 }
 
 // ===== History (lookup, view, export) =====
-function History({ intakes, repairs, initialSerial }: { intakes: Intake[]; repairs: Repair[]; initialSerial?: string }) {
+function History({
+  intakes,
+  repairs,
+  initialSerial
+}: {
+  intakes: Intake[];
+  repairs: Repair[];
+  initialSerial?: string;
+}) {
   const [q, setQ] = useState(initialSerial || '');
   const [selected, setSelected] = useState<any | null>(null);
   const [showCombined, setShowCombined] = useState(false);
 
-  type HistoryRow = { type: 'intake' | 'repair'; when: string; data: Intake | Repair };
+  type Row = { type: 'intake' | 'repair'; when: string; data: Intake | Repair };
 
-  const list = useMemo<HistoryRow[]>(() => {
+  const list = useMemo<Row[]>(() => {
     const serial = q.trim();
     if (!serial) return [];
-    const a: HistoryRow[] = intakes
+    const a: Row[] = intakes
       .filter((i) => i.serial === serial)
       .map((i) => ({ type: 'intake', when: i.createdAt, data: i }));
-    const b: HistoryRow[] = repairs
+    const b: Row[] = repairs
       .filter((r) => r.serial === serial)
       .map((r) => ({ type: 'repair', when: r.startAt, data: r }));
-    return [...a, ...b].sort((x, y) => new Date(x.when).getTime() - new Date(y.when).getTime());
+    return ([] as Row[]).concat(a as Row[]).concat(b as Row[]).sort((x, y) => new Date(x.when).getTime() - new Date(y.when).getTime());
   }, [q, intakes, repairs]);
 
   const combinedRec: CombinedRecord | null = useMemo(() => {
@@ -1254,12 +1377,35 @@ function History({ intakes, repairs, initialSerial }: { intakes: Intake[]; repai
 
   function exportCsv() {
     const rows: Record<string, any>[] = [];
-    intakes.forEach((i) => rows.push({ kind: 'intake', serial: i.serial, model: i.model, family: i.family, sizeIn: i.sizeIn, source: i.returnSource, reason: i.returnReason, createdAt: i.createdAt }));
+    intakes.forEach((i) =>
+      rows.push({
+        kind: 'intake',
+        serial: i.serial,
+        model: i.model,
+        family: i.family,
+        sizeIn: i.sizeIn,
+        source: i.returnSource,
+        reason: i.returnReason,
+        createdAt: i.createdAt,
+        notes: i.notes || ''
+      })
+    );
     repairs.forEach((r) =>
-      rows.push({ kind: 'repair', serial: r.serial, failure: r.failureCode, actions: r.actions.join('|'), disposition: r.disposition, startAt: r.startAt, endAt: r.endAt || '' }),
+      rows.push({
+        kind: 'repair',
+        serial: r.serial,
+        failure: r.failureCode,
+        actions: r.actions.join('|'),
+        disposition: r.disposition,
+        startAt: r.startAt,
+        endAt: r.endAt || '',
+        notes: r.notes || ''
+      })
     );
     downloadCSV('repairs_history.csv', rows);
   }
+
+  const preview = (t?: string) => (t ? (t.length > 120 ? t.slice(0, 120) + '…' : t) : '');
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
@@ -1327,10 +1473,11 @@ function History({ intakes, repairs, initialSerial }: { intakes: Intake[]; repai
               </div>
               <div style={{ fontSize: 12, color: theme.subtext }}>{new Date(row.when).toLocaleString()}</div>
             </div>
+
             {row.type === 'intake' ? (
               <div style={{ fontSize: 13, marginTop: 8 }}>
                 <div>
-                  <b>Serial:</b> {row.data.serial}
+                  <b>Serial:</b> {(row.data as Intake).serial}
                 </div>
                 <div>
                   <b>Family/Model:</b> {(row.data as Intake).family} / {(row.data as Intake).model} — {(row.data as Intake).sizeIn}"
@@ -1338,6 +1485,12 @@ function History({ intakes, repairs, initialSerial }: { intakes: Intake[]; repai
                 <div>
                   <b>Return:</b> {(row.data as Intake).returnSource} – {(row.data as Intake).returnReason}
                 </div>
+                {/* 🔥 notes preview in list */}
+                {(row.data as Intake).notes ? (
+                  <div style={{ marginTop: 4, color: theme.subtext }}>
+                    <b>Notes:</b> {preview((row.data as Intake).notes)}
+                  </div>
+                ) : null}
                 <div style={{ marginTop: 8 }}>
                   <button
                     style={btnGhost}
@@ -1353,7 +1506,7 @@ function History({ intakes, repairs, initialSerial }: { intakes: Intake[]; repai
             ) : (
               <div style={{ fontSize: 13, marginTop: 8 }}>
                 <div>
-                  <b>Serial:</b> {row.data.serial}
+                  <b>Serial:</b> {(row.data as Repair).serial}
                 </div>
                 <div>
                   <b>Failure/Disp:</b> {(row.data as Repair).failureCode} / {(row.data as Repair).disposition}
@@ -1361,6 +1514,12 @@ function History({ intakes, repairs, initialSerial }: { intakes: Intake[]; repai
                 <div>
                   <b>Actions:</b> {(row.data as Repair).actions.join(', ')}
                 </div>
+                {/* 🔥 notes preview in list */}
+                {(row.data as Repair).notes ? (
+                  <div style={{ marginTop: 4, color: theme.subtext }}>
+                    <b>Notes:</b> {preview((row.data as Repair).notes)}
+                  </div>
+                ) : null}
                 <div style={{ marginTop: 8 }}>
                   <button
                     style={btnGhost}
@@ -1386,7 +1545,7 @@ function AdminPanel({
   sizes,
   sources,
   reasons,
-  onSave,
+  onSave
 }: {
   sizes: number[];
   sources: string[];
@@ -1414,10 +1573,7 @@ function AdminPanel({
       .filter((n) => !isNaN(n));
   }
   function parseList(t: string) {
-    return t
-      .split(/\n+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
+    return t.split(/\n+/).map((s) => s.trim()).filter(Boolean);
   }
   function save() {
     onSave(parseSizes(szText), parseList(srcText), parseList(reaText));
@@ -1522,14 +1678,27 @@ export default function App() {
           position: 'sticky',
           top: 0,
           background: `linear-gradient(90deg,${theme.primaryDark},${theme.primary})`,
-          borderBottom: `1px solid ${theme.border}`,
+          borderBottom: `1px solid ${theme.border}`
         }}
       >
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ fontWeight: 800, letterSpacing: 0.3, color: 'white', fontSize: 20, textShadow: '1px 1px 2px #000' }}>
-            ROKU 1PTV Repair
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: 12, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          {/* 🔥 Creator watermark + Title */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 240 }}>
+            <div style={{ fontSize: 11, color: 'white', opacity: 0.85, fontWeight: 600 }}>Creator: Edgar Garcia</div>
+            <div
+              style={{
+                fontWeight: 800,
+                letterSpacing: 0.3,
+                color: 'white',
+                fontSize: 20,
+                textShadow: '1px 1px 2px #000'
+              }}
+            >
+              ROKU 1PTV Repair
+            </div>
           </div>
-          <nav style={{ display: 'flex', gap: 8, fontSize: 14 }}>
+
+          <nav style={{ display: 'flex', gap: 8, fontSize: 14, flexWrap: 'wrap' }}>
             {(['intake', 'repair', 'dashboard', 'history', 'admin'] as const).map((t) => (
               <button key={t} onClick={() => setTab(t)} style={{ ...btnStyle, background: tab === t ? theme.primaryDark : theme.primary }}>
                 {t[0].toUpperCase() + t.slice(1)}
@@ -1541,13 +1710,30 @@ export default function App() {
 
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: 16 }}>
         {tab === 'intake' && <IntakeForm sizes={sizes} sources={sources} reasons={reasons} onSaved={(i) => setIntakes((prev) => [...prev, i])} />}
+
         {tab === 'repair' && <RepairForm serials={serials} onSaved={(r) => setRepairs((prev) => [...prev, r])} />}
+
         {tab === 'dashboard' && <Dashboard intakes={intakes} repairs={repairs} onViewSerial={(sn) => { setHistorySerial(sn); setTab('history'); }} />}
+
         {tab === 'history' && <History intakes={intakes} repairs={repairs} initialSerial={historySerial} />}
-        {tab === 'admin' && <AdminPanel sizes={sizes} sources={sources} reasons={reasons} onSave={(ns, so, re) => { setSizes(ns); setSources(so); setReasons(re); }} />}
+
+        {tab === 'admin' && (
+          <AdminPanel
+            sizes={sizes}
+            sources={sources}
+            reasons={reasons}
+            onSave={(ns, so, re) => {
+              setSizes(ns);
+              setSources(so);
+              setReasons(re);
+            }}
+          />
+        )}
       </main>
     </div>
   );
 }
+
+
 
 
