@@ -11,3 +11,23 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+/* ---- 1PTV layout helpers ---- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body { margin: 0; background: #fff; }
+
+/* Make all native inputs never exceed their container */
+input, select, textarea { max-width: 100%; width: 100%; display: block; }
+
+/* Cards: keep children inside rounded corners */
+.card-fix { overflow: hidden; }
+
+/* Any 2-column grid that should stack on narrow screens */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 720px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
