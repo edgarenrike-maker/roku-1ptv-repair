@@ -1,0 +1,25 @@
+{
+  "short_name": "1PTV Repair",
+  "name": "ROKU 1PTV Repair and Traceability App",
+  "description": "Internal Roku tool for managing customer return inspections, repair data, and traceability of B-Stock TVs.",
+  "icons": [
+    {
+      "src": "roku-1ptv-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "roku-1ptv-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#6F1AB1",
+  "lang": "en-US"
+}
+
+

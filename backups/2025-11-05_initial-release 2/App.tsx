@@ -1,17 +1,18 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
-import { saveIntakeCloud, saveRepairCloud, listenIntakes, listenRepairs } from './firebase';
-import { testWrite, debugProject } from "./firebase";
-import { submitRepairViaFlow } from "./lib/submitRepair";
 
 /**********************************************
- * ROKU 1PTV Repair – Full App (Firestore + Offline)
- * Tabs:
- *  • Intake – pre-repair checklist (cosmetics & accessories) + photos
- *  • Repair – standardized dropdowns (failure/actions + custom) + photos
- *  • Dashboard – KPIs, weekly throughput, Pareto, recent repairs
- *  • History – search by Serial, combined viewer, CSV/PDF export
- *  • Admin – pass-key settings for sizes/sources/reasons
+ * ROKU 1PTV Repair – Full Single-File App (Traceability Ready)
+ *
+ * Tabs
+ *  • Intake  – full pre-repair checklist (incl. cosmetics & accessories) + photos
+ *  • Repair  – standardized dropdowns (failure/actions with custom add) + photos
+ *  • Dashboard – KPIs, 7-day throughput, Pareto, recent repairs (jump to History)
+ *  • History – search by Serial, individual/combined viewer + CSV/PDF export
+ *  • Admin   – pass-key protected lists editor (sizes/sources/reasons)
+ *
+ * Storage: IndexedDB (intakes/repairs) + localStorage (admin lists)
+ * Theme: Roku purple header, white bg, white title, bold 3D nav buttons
  **********************************************/
 
 // ===== Theme =====
@@ -86,14 +87,15 @@ const chip: React.CSSProperties = {
   ...baseFont,
 };
 
-const isBrowser = typeof window !== 'undefined';
+// ===== Runtime guard =====
+const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
 // ===== Types =====
 type ChecklistStatus = 'Pass' | 'Conditional' | 'Fail' | 'N/A';
 
 type Intake = {
   serial: string;
-  family: string;
+  family: string; // free typed
   model: string;
   sizeIn: number | '';
   mac?: string;
@@ -117,18 +119,18 @@ type Intake = {
     accessory_screws: ChecklistStatus;
   };
   photos: string[];
-  createdAt: string;
+  createdAt: string; // ISO
 };
 
 type RepairDisposition = 'Repaired' | 'Scrap' | 'NTF' | 'BER';
 
 type Repair = {
-  serial: string;
-  startAt: string;
-  endAt?: string;
+  serial: string; // links to Intake
+  startAt: string; // ISO
+  endAt?: string; // ISO
   technician?: string;
-  failureCode: string;
-  actions: string[];
+  failureCode: string; // pick or typed
+  actions: string[]; // pick or typed
   disposition: RepairDisposition;
   notes?: string;
   photos: string[];
@@ -254,13 +256,9 @@ const CRITERIA: Record<string, { title: string; bullets: string[] }> = {
   },
 };
 
-// ===== IndexedDB hook =====
-function useIndexedDB<T>(
-  key: string,
-  initial: T[]
-): [T[], React.Dispatch<React.SetStateAction<T[]>>] {
+// ===== IndexedDB Hook =====
+function useIndexedDB<T>(key: string, initial: T[]): [T[], React.Dispatch<React.SetStateAction<T[]>>] {
   const [data, setData] = useState<T[]>(initial);
-
   useEffect(() => {
     if (!isBrowser || !('indexedDB' in window)) return;
     const req = indexedDB.open('RokuRepairDB', 1);
@@ -277,7 +275,6 @@ function useIndexedDB<T>(
       } catch {}
     };
   }, [key]);
-
   useEffect(() => {
     if (!isBrowser || !('indexedDB' in window)) return;
     const req = indexedDB.open('RokuRepairDB', 1);
@@ -289,7 +286,6 @@ function useIndexedDB<T>(
       } catch {}
     };
   }, [data, key]);
-
   return [data, setData];
 }
 
@@ -316,7 +312,7 @@ function isRepairRecord(x: any): x is Repair {
   return x && typeof x === 'object' && 'failureCode' in x && 'disposition' in x;
 }
 
-// ===== PDF single/combined =====
+// ===== PDF helpers =====
 function downloadPDF(record: any) {
   try {
     const doc = new jsPDF();
@@ -339,27 +335,49 @@ function downloadPDF(record: any) {
     header('ROKU 1PTV Repair Record');
 
     if (isIntakeRecord(record)) {
-      const i = record as Intake;
       line('— Intake');
-      line(`Serial: ${i.serial}`);
-      line(`Family/Model/Size: ${i.family} / ${i.model} / ${i.sizeIn}"`);
-      line(`Return: ${i.returnSource} — ${i.returnReason}`);
-      line(`Incoming condition: ${i.conditionIn}`);
-      line(`Created: ${new Date(i.createdAt).toLocaleString()}`);
+      line(`Serial: ${record.serial}`);
+      line(`Family/Model/Size: ${record.family} / ${record.model} / ${record.sizeIn}"`);
+      line(`Return: ${record.returnSource} — ${record.returnReason}`);
+      line(`Incoming condition: ${record.conditionIn}`);
+      line(`Created: ${new Date(record.createdAt).toLocaleString()}`);
       line('Checklist:');
-      Object.entries(i.checklist).forEach(([k, v]) => line(`  • ${k}: ${v}`));
-      if (i.notes) line(`Notes: ${i.notes}`);
+      Object.entries(record.checklist).forEach(([k, v]) => line(`  • ${k}: ${v}`));
+      if (record.notes) {
+        line('Notes:');
+        record.notes.split('\n').forEach((n: string) => line('  ' + n));
+      }
+      if (record.photos?.length) {
+        line('Photos:');
+        record.photos.slice(0, 3).forEach((p, idx) => {
+          try {
+            doc.addImage(p, 'JPEG', 10 + idx * 60, (doc as any)._cursorY, 50, 38);
+          } catch {}
+        });
+        (doc as any)._cursorY = ((doc as any)._cursorY || 20) + 44;
+      }
     } else if (isRepairRecord(record)) {
-      const r = record as Repair;
       line('— Repair');
-      line(`Serial: ${r.serial}`);
-      line(`Failure: ${r.failureCode}`);
-      line(`Actions: ${(r.actions || []).join(', ')}`);
-      line(`Disposition: ${r.disposition}`);
-      if (r.technician) line(`Technician: ${r.technician}`);
-      if (r.startAt) line(`Start: ${new Date(r.startAt).toLocaleString()}`);
-      if (r.endAt) line(`End: ${new Date(r.endAt).toLocaleString()}`);
-      if (r.notes) line(`Notes: ${r.notes}`);
+      line(`Serial: ${record.serial}`);
+      line(`Failure: ${record.failureCode}`);
+      line(`Actions: ${(record.actions || []).join(', ')}`);
+      line(`Disposition: ${record.disposition}`);
+      if (record.technician) line(`Technician: ${record.technician}`);
+      if (record.startAt) line(`Start: ${new Date(record.startAt).toLocaleString()}`);
+      if (record.endAt) line(`End: ${new Date(record.endAt).toLocaleString()}`);
+      if (record.notes) {
+        line('Notes:');
+        record.notes.split('\n').forEach((n: string) => line('  ' + n));
+      }
+      if (record.photos?.length) {
+        line('Photos:');
+        record.photos.slice(0, 3).forEach((p, idx) => {
+          try {
+            doc.addImage(p, 'JPEG', 10 + idx * 60, (doc as any)._cursorY, 50, 38);
+          } catch {}
+        });
+        (doc as any)._cursorY = ((doc as any)._cursorY || 20) + 44;
+      }
     } else {
       line('Unknown record type');
     }
@@ -402,7 +420,19 @@ function downloadCombinedPDF(rec: CombinedRecord) {
       line(`Created: ${new Date(i.createdAt).toLocaleString()}`);
       line('Checklist:');
       Object.entries(i.checklist).forEach(([k, v]) => line(`  • ${k}: ${v}`));
-      if (i.notes) line(`Notes: ${i.notes}`);
+      if (i.notes) {
+        line('Notes:');
+        i.notes.split('\n').forEach((n: string) => line('  ' + n));
+      }
+      if (i.photos?.length) {
+        line('Photos:');
+        i.photos.slice(0, 3).forEach((p, idx) => {
+          try {
+            doc.addImage(p, 'JPEG', 10 + idx * 60, (doc as any)._cursorY, 50, 38);
+          } catch {}
+        });
+        (doc as any)._cursorY = ((doc as any)._cursorY || 20) + 44;
+      }
     } else {
       line('No intake record.');
     }
@@ -418,7 +448,19 @@ function downloadCombinedPDF(rec: CombinedRecord) {
         line(`Actions: ${(r.actions || []).join(', ')}`);
         line(`Disposition: ${r.disposition}`);
         if (r.technician) line(`Technician: ${r.technician}`);
-        if (r.notes) line(`Notes: ${r.notes}`);
+        if (r.notes) {
+          line('Notes:');
+          r.notes.split('\n').forEach((n: string) => line('  ' + n));
+        }
+        if (r.photos?.length) {
+          line('Photos:');
+          r.photos.slice(0, 3).forEach((p, idx2) => {
+            try {
+              doc.addImage(p, 'JPEG', 10 + idx2 * 60, (doc as any)._cursorY, 50, 38);
+            } catch {}
+          });
+          (doc as any)._cursorY = ((doc as any)._cursorY || 20) + 44;
+        }
       });
     } else {
       doc.addPage();
@@ -433,7 +475,7 @@ function downloadCombinedPDF(rec: CombinedRecord) {
   }
 }
 
-// ===== Shared inputs =====
+// ===== Shared standardized inputs =====
 function UiSelect({
   value,
   onChange,
@@ -516,6 +558,7 @@ function UiCombo({
   );
 }
 
+// ONE (and only one) definition of UiMultiCombo
 function UiMultiCombo({
   value,
   setValue,
@@ -592,6 +635,7 @@ function UiMultiCombo({
   );
 }
 
+// ===== Small helpers =====
 function KpiCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div style={card}>
@@ -623,7 +667,6 @@ function PhotoPicker({ onPick }: { onPick: (dataUrl: string) => void }) {
   return <input type="file" accept="image/*" onChange={onChange} />;
 }
 
-// ===== Record viewers =====
 function RecordViewer({ record }: { record: any }) {
   if (isIntakeRecord(record)) {
     const i = record as Intake;
@@ -631,14 +674,32 @@ function RecordViewer({ record }: { record: any }) {
       <div>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Intake</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <div><b>Serial:</b> {i.serial}</div>
-          <div><b>Created:</b> {new Date(i.createdAt).toLocaleString()}</div>
-          <div><b>Family:</b> {i.family}</div>
-          <div><b>Model:</b> {i.model}</div>
-          <div><b>Size:</b> {i.sizeIn}"</div>
-          <div><b>Return:</b> {i.returnSource} — {i.returnReason}</div>
-          <div><b>Incoming condition:</b> {i.conditionIn}</div>
-          {i.mac ? <div><b>MAC:</b> {i.mac}</div> : null}
+          <div>
+            <b>Serial:</b> {i.serial}
+          </div>
+          <div>
+            <b>Created:</b> {new Date(i.createdAt).toLocaleString()}
+          </div>
+          <div>
+            <b>Family:</b> {i.family}
+          </div>
+          <div>
+            <b>Model:</b> {i.model}
+          </div>
+          <div>
+            <b>Size:</b> {i.sizeIn}"
+          </div>
+          <div>
+            <b>Return:</b> {i.returnSource} — {i.returnReason}
+          </div>
+          <div>
+            <b>Incoming condition:</b> {i.conditionIn}
+          </div>
+          {i.mac ? (
+            <div>
+              <b>MAC:</b> {i.mac}
+            </div>
+          ) : null}
         </div>
         <div style={{ marginTop: 12 }}>
           <div style={{ fontWeight: 600, marginBottom: 6 }}>Checklist</div>
@@ -652,14 +713,21 @@ function RecordViewer({ record }: { record: any }) {
             <tbody>
               {Object.entries(i.checklist).map(([k, v]) => (
                 <tr key={k}>
-                  <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{k.replace(/_/g, ' ')}</td>
+                  <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>
+                    {k.replace(/_/g, ' ')}
+                  </td>
                   <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{v}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {i.notes ? <div style={{ marginTop: 12 }}><b>Notes:</b> {i.notes}</div> : null}
+        {i.notes ? (
+          <div style={{ marginTop: 12 }}>
+            <b>Notes:</b>
+            <div style={{ whiteSpace: 'pre-wrap', marginTop: 4 }}>{i.notes}</div>
+          </div>
+        ) : null}
         {i.photos?.length ? (
           <div style={{ marginTop: 12 }}>
             <div style={{ fontWeight: 600, marginBottom: 6 }}>Photos</div>
@@ -669,7 +737,13 @@ function RecordViewer({ record }: { record: any }) {
                   key={idx}
                   src={p}
                   alt={`i${idx}`}
-                  style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, border: `1px solid ${theme.border}` }}
+                  style={{
+                    width: 96,
+                    height: 96,
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                    border: `1px solid ${theme.border}`,
+                  }}
                 />
               ))}
             </div>
@@ -684,15 +758,38 @@ function RecordViewer({ record }: { record: any }) {
       <div>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Repair</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <div><b>Serial:</b> {r.serial}</div>
-          <div><b>Start:</b> {new Date(r.startAt).toLocaleString()}</div>
-          {r.endAt ? <div><b>End:</b> {new Date(r.endAt).toLocaleString()}</div> : null}
-          <div><b>Failure:</b> {r.failureCode}</div>
-          <div><b>Actions:</b> {r.actions.join(', ')}</div>
-          <div><b>Disposition:</b> {r.disposition}</div>
-          {r.technician ? <div><b>Technician:</b> {r.technician}</div> : null}
+          <div>
+            <b>Serial:</b> {r.serial}
+          </div>
+          <div>
+            <b>Start:</b> {new Date(r.startAt).toLocaleString()}
+          </div>
+          {r.endAt ? (
+            <div>
+              <b>End:</b> {new Date(r.endAt).toLocaleString()}
+            </div>
+          ) : null}
+          <div>
+            <b>Failure:</b> {r.failureCode}
+          </div>
+          <div>
+            <b>Actions:</b> {r.actions.join(', ')}
+          </div>
+          <div>
+            <b>Disposition:</b> {r.disposition}
+          </div>
+          {r.technician ? (
+            <div>
+              <b>Technician:</b> {r.technician}
+            </div>
+          ) : null}
         </div>
-        {r.notes ? <div style={{ marginTop: 12 }}><b>Notes:</b> {r.notes}</div> : null}
+        {r.notes ? (
+          <div style={{ marginTop: 12 }}>
+            <b>Notes:</b>
+            <div style={{ whiteSpace: 'pre-wrap', marginTop: 4 }}>{r.notes}</div>
+          </div>
+        ) : null}
         {r.photos?.length ? (
           <div style={{ marginTop: 12 }}>
             <div style={{ fontWeight: 600, marginBottom: 6 }}>Photos</div>
@@ -702,7 +799,13 @@ function RecordViewer({ record }: { record: any }) {
                   key={idx}
                   src={p}
                   alt={`r${idx}`}
-                  style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, border: `1px solid ${theme.border}` }}
+                  style={{
+                    width: 96,
+                    height: 96,
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                    border: `1px solid ${theme.border}`,
+                  }}
                 />
               ))}
             </div>
@@ -723,19 +826,23 @@ function CombinedViewer({ rec }: { rec: CombinedRecord }) {
           <RecordViewer record={rec.intake} />
         </div>
       ) : (
-        <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>No intake record stored for this serial.</div>
+        <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>
+          No intake record stored for this serial.
+        </div>
       )}
 
-      {rec.repairs.length
-        ? rec.repairs
-            .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
-            .map((r, idx) => (
-              <div key={idx} style={card}>
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>Repair #{idx + 1}</div>
-                <RecordViewer record={r} />
-              </div>
-            ))
-        : <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>No repairs recorded yet.</div>}
+      {rec.repairs.length ? (
+        rec.repairs
+          .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
+          .map((r, idx) => (
+            <div key={idx} style={card}>
+              <div style={{ fontWeight: 600, marginBottom: 8 }}>Repair #{idx + 1}</div>
+              <RecordViewer record={r} />
+            </div>
+          ))
+      ) : (
+        <div style={{ ...card, color: theme.subtext, fontSize: 12 }}>No repairs recorded yet.</div>
+      )}
     </div>
   );
 }
@@ -800,12 +907,10 @@ function IntakeForm({
     e.preventDefault();
     setSaving(true);
     try {
-      const sizeInNormalized: Intake['sizeIn'] =
-        v.sizeIn === '' ? ('' as const) : Number(v.sizeIn);
-      const payload: Intake = { ...v, sizeIn: sizeInNormalized };
-      onSaved(payload);
+      onSaved({ ...v, sizeIn: v.sizeIn === '' ? '' : Number(v.sizeIn) });
       alert(blockers ? 'Repair blocked: Hold – QE Review' : 'Intake saved. Proceed to Repair.');
       setV({
+        ...v,
         serial: '',
         family: '',
         model: '',
@@ -815,9 +920,7 @@ function IntakeForm({
         returnReason: '',
         conditionIn: '',
         notes: '',
-        checklist: { ...v.checklist },
         photos: [],
-        createdAt: new Date().toISOString(),
       });
     } finally {
       setSaving(false);
@@ -840,16 +943,14 @@ function IntakeForm({
     ['accessory_screws', 'Accessory – Screws'],
   ] as const;
 
-  function removePhoto(idx: number) {
-    setV(prev => ({ ...prev, photos: prev.photos.filter((_, i) => i !== idx) }));
-  }
-
   return (
     <form onSubmit={onSubmit} style={{ display: 'grid', gap: 16 }}>
       <div style={card}>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Identification</div>
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Serial Number</label>
         <input style={fieldStyle} value={v.serial} onChange={(e) => set('serial', e.target.value)} required />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Family</label>
         <input
           style={fieldStyle}
@@ -858,22 +959,43 @@ function IntakeForm({
           placeholder="Enter Family (e.g., Abilene, Burton, Proper…)"
           required
         />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Model</label>
         <input style={fieldStyle} value={v.model} onChange={(e) => set('model', e.target.value)} required />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Size (in)</label>
         <UiSelect
           value={String(v.sizeIn)}
           onChange={(val) => set('sizeIn', val === '' ? '' : (Number(val) as any))}
           placeholder="Select size…"
-          options={DEFAULT_TV_SIZES.map((s) => String(s))}
+          options={sizes.map((s) => String(s))}
           required
         />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>MAC (optional)</label>
-        <input style={fieldStyle} value={v.mac} onChange={(e) => set('mac', e.target.value)} placeholder="e.g., AA:BB:CC:DD:EE:FF" />
+        <input
+          style={fieldStyle}
+          value={v.mac}
+          onChange={(e) => set('mac', e.target.value)}
+          placeholder="e.g., AA:BB:CC:DD:EE:FF"
+        />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Return Source</label>
-        <UiCombo value={v.returnSource} setValue={(val) => set('returnSource', val)} options={DEFAULT_RETURN_SOURCE_SUGGESTIONS} placeholder="Select return source…" />
+        <UiCombo
+          value={v.returnSource}
+          setValue={(val) => set('returnSource', val)}
+          options={DEFAULT_RETURN_SOURCE_SUGGESTIONS}
+          placeholder="Select return source…"
+        />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Return Reason</label>
-        <UiCombo value={v.returnReason} setValue={(val) => set('returnReason', val)} options={DEFAULT_RETURN_REASON_SUGGESTIONS} placeholder="Select return reason…" />
+        <UiCombo
+          value={v.returnReason}
+          setValue={(val) => set('returnReason', val)}
+          options={DEFAULT_RETURN_REASON_SUGGESTIONS}
+          placeholder="Select return reason…"
+        />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Incoming Condition</label>
         <UiSelect
           value={v.conditionIn}
@@ -882,6 +1004,7 @@ function IntakeForm({
           options={['OK', 'Minor cosmetic', 'Major cosmetic', 'Functional fail', 'Unknown']}
           required
         />
+
         <label style={{ fontSize: 12, color: theme.subtext }}>Notes</label>
         <textarea style={{ ...fieldStyle, height: 80 }} value={v.notes} onChange={(e) => set('notes', e.target.value)} />
       </div>
@@ -897,12 +1020,24 @@ function IntakeForm({
                 onChange={(val) => setC(k as any, val as any)}
                 options={['Pass', 'Conditional', 'Fail', 'N/A']}
               />
-              <button type="button" onClick={() => toggleHelp(k)} style={{ ...btnGhost, padding: '4px 8px' }}>
+              <button
+                type="button"
+                onClick={() => toggleHelp(k)}
+                style={{ ...btnGhost, padding: '4px 8px' }}
+              >
                 {openHelp[k] ? 'Hide criteria' : 'View criteria'}
               </button>
             </div>
             {openHelp[k] && (
-              <div style={{ marginTop: 6, background: '#FFF', border: `1px dashed ${theme.border}`, padding: 8, borderRadius: 8 }}>
+              <div
+                style={{
+                  marginTop: 6,
+                  background: '#FFF',
+                  border: `1px dashed ${theme.border}`,
+                  padding: 8,
+                  borderRadius: 8,
+                }}
+              >
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>{CRITERIA[k]?.title || label}</div>
                 <ul style={{ margin: 0, paddingLeft: 18 }}>
                   {(CRITERIA[k]?.bullets || ['Define criteria']).map((b, i) => (
@@ -915,26 +1050,46 @@ function IntakeForm({
             )}
           </div>
         ))}
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontWeight: 600 }}>Photos</div>
           <div style={{ fontSize: 12, color: theme.subtext }}>{v.photos.length}</div>
         </div>
+
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
           <PhotoPicker onPick={(d) => setV((prev) => ({ ...prev, photos: [...prev.photos, d] }))} />
           {v.photos.map((p, i) => (
-            <div key={i} style={{ position: 'relative' }}>
+            <div key={i} style={{ position: 'relative', width: 72, height: 72 }}>
               <img
                 src={p}
                 alt={`p${i}`}
-                style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: `1px solid ${theme.border}` }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`,
+                }}
               />
               <button
                 type="button"
-                onClick={() => removePhoto(i)}
-                title="Remove"
+                onClick={() =>
+                  setV((prev) => ({ ...prev, photos: prev.photos.filter((_, idx2) => idx2 !== i) }))
+                }
+                title="Remove photo"
                 style={{
-                  position: 'absolute', top: -8, right: -8, width: 20, height: 20,
-                  borderRadius: 999, border: 'none', background: '#d00', color: '#fff', cursor: 'pointer', fontWeight: 800
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  border: `1px solid ${theme.border}`,
+                  background: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                  lineHeight: '20px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
                 }}
               >
                 ×
@@ -944,9 +1099,15 @@ function IntakeForm({
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button disabled={saving} style={btnStyle}>{saving ? 'Saving…' : 'Save Intake & Continue'}</button>
-        {blockers && <span style={{ fontSize: 12, color: '#c00', alignSelf: 'center' }}>Repair will be blocked (Hold – QE Review)</span>}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button disabled={saving} style={btnStyle}>
+          {saving ? 'Saving…' : 'Save Intake & Continue'}
+        </button>
+        {blockers && (
+          <span style={{ fontSize: 12, color: '#c00', alignSelf: 'center' }}>
+            Repair will be blocked (Hold – QE Review)
+          </span>
+        )}
       </div>
     </form>
   );
@@ -963,10 +1124,6 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
   const [disposition, setDisposition] = useState<RepairDisposition>('Repaired');
   const [notes, setNotes] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
-
-  function removePhoto(idx: number) {
-    setPhotos(prev => prev.filter((_, i) => i !== idx));
-  }
 
   function save(e: React.FormEvent) {
     e.preventDefault();
@@ -1002,7 +1159,12 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <div>
             <label style={{ fontSize: 12, color: theme.subtext }}>Start</label>
-            <input type="datetime-local" style={fieldStyle} value={startAt} onChange={(e) => setStartAt(e.target.value)} />
+            <input
+              type="datetime-local"
+              style={fieldStyle}
+              value={startAt}
+              onChange={(e) => setStartAt(e.target.value)}
+            />
           </div>
           <div>
             <label style={{ fontSize: 12, color: theme.subtext }}>End</label>
@@ -1010,19 +1172,39 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
           </div>
         </div>
         <label style={{ fontSize: 12, color: theme.subtext }}>Technician</label>
-        <input style={fieldStyle} value={technician} onChange={(e) => setTechnician(e.target.value)} placeholder="Tech name or ID" />
+        <input
+          style={fieldStyle}
+          value={technician}
+          onChange={(e) => setTechnician(e.target.value)}
+          placeholder="Tech name or ID"
+        />
       </div>
 
       <div style={card}>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Diagnosis & Actions</div>
         <label style={{ fontSize: 12, color: theme.subtext }}>Failure Code</label>
-        <UiCombo value={failureCode} setValue={setFailureCode} options={FAILURE_CODES} placeholder="Select failure code…" />
+        <UiCombo
+          value={failureCode}
+          setValue={setFailureCode}
+          options={FAILURE_CODES}
+          placeholder="Select failure code…"
+        />
         <label style={{ fontSize: 12, color: theme.subtext }}>Actions</label>
         <UiMultiCombo value={actions} setValue={setActions} options={ACTION_CODES} placeholder="Add actions…" />
         <label style={{ fontSize: 12, color: theme.subtext }}>Disposition</label>
-        <UiSelect value={disposition} onChange={(val) => setDisposition(val as RepairDisposition)} options={['Repaired', 'Scrap', 'NTF', 'BER']} />
+        <UiSelect
+          value={disposition}
+          onChange={(val) => setDisposition(val as RepairDisposition)}
+          options={['Repaired', 'Scrap', 'NTF', 'BER']}
+        />
         <label style={{ fontSize: 12, color: theme.subtext }}>Notes</label>
-        <textarea style={{ ...fieldStyle, height: 80 }} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Root cause, parts replaced, observations…" />
+        <textarea
+          style={{ ...fieldStyle, height: 80 }}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Root cause, parts replaced, observations…"
+        />
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontWeight: 600 }}>Photos</div>
           <div style={{ fontSize: 12, color: theme.subtext }}>{photos.length}</div>
@@ -1030,19 +1212,35 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
           <PhotoPicker onPick={(d) => setPhotos((prev) => [...prev, d])} />
           {photos.map((p, i) => (
-            <div key={i} style={{ position: 'relative' }}>
+            <div key={i} style={{ position: 'relative', width: 72, height: 72 }}>
               <img
                 src={p}
                 alt={`r${i}`}
-                style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: `1px solid ${theme.border}` }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`,
+                }}
               />
               <button
                 type="button"
-                onClick={() => removePhoto(i)}
-                title="Remove"
+                onClick={() => setPhotos((prev) => prev.filter((_, idx2) => idx2 !== i))}
+                title="Remove photo"
                 style={{
-                  position: 'absolute', top: -8, right: -8, width: 20, height: 20,
-                  borderRadius: 999, border: 'none', background: '#d00', color: '#fff', cursor: 'pointer', fontWeight: 800
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  border: `1px solid ${theme.border}`,
+                  background: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                  lineHeight: '20px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
                 }}
               >
                 ×
@@ -1051,6 +1249,7 @@ function RepairForm({ serials, onSaved }: { serials: string[]; onSaved: (repair:
           ))}
         </div>
       </div>
+
       <div style={{ display: 'flex', gap: 8 }}>
         <button style={btnStyle}>Save Repair</button>
       </div>
@@ -1070,6 +1269,7 @@ function Dashboard({
 }) {
   const todayStr = new Date().toDateString();
   const processedToday = intakes.filter((i) => new Date(i.createdAt).toDateString() === todayStr).length;
+
   const bySerialRepairs = repairs.reduce<Record<string, Repair[]>>((acc, r) => {
     (acc[r.serial] ||= []).push(r);
     return acc;
@@ -1077,10 +1277,12 @@ function Dashboard({
   const repeatRepairs30d = Object.values(bySerialRepairs).filter(
     (arr) => arr.filter((r) => Date.now() - new Date(r.startAt).getTime() <= 30 * 24 * 3600 * 1000).length > 1
   ).length;
+
   const last30 = repairs.filter((r) => Date.now() - new Date(r.startAt).getTime() <= 30 * 24 * 3600 * 1000);
   const repaired = last30.filter((r) => r.disposition === 'Repaired').length;
   const scrapped = last30.filter((r) => r.disposition === 'Scrap').length;
   const yieldPct = repaired + scrapped ? Math.round((repaired / (repaired + scrapped)) * 100) : 0;
+
   const openHolds = intakes.filter(
     (v) =>
       v.checklist.labels_match === 'Fail' ||
@@ -1112,18 +1314,23 @@ function Dashboard({
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <div style={{ fontSize: 20, fontWeight: 600 }}>Repair Dashboard</div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 12 }}>
         <KpiCard label="Processed Today" value={processedToday} />
         <KpiCard label="Repair Yield (30d)" value={`${yieldPct}%`} />
         <KpiCard label="Open Holds" value={openHolds} />
         <KpiCard label="Repeat Repairs (30d)" value={repeatRepairs30d} />
       </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={card}>
           <div style={{ fontWeight: 600, marginBottom: 8 }}>7-Day Throughput</div>
           <div style={{ display: 'grid', gap: 8 }}>
             {days.map((d) => (
-              <div key={d.label} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 40px', alignItems: 'center', gap: 8 }}>
+              <div
+                key={d.label}
+                style={{ display: 'grid', gridTemplateColumns: '80px 1fr 40px', alignItems: 'center', gap: 8 }}
+              >
                 <div style={{ fontSize: 12, color: theme.subtext }}>{d.label}</div>
                 {smallBar(d.count, maxCount)}
                 <div style={{ textAlign: 'right', fontSize: 12 }}>{d.count}</div>
@@ -1131,6 +1338,7 @@ function Dashboard({
             ))}
           </div>
         </div>
+
         <div style={card}>
           <div style={{ fontWeight: 600, marginBottom: 8 }}>Top Fail Codes (30d)</div>
           {pareto.length === 0 ? (
@@ -1173,7 +1381,9 @@ function Dashboard({
                     <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{r.failureCode}</td>
                     <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{r.actions.join(', ')}</td>
                     <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{r.disposition}</td>
-                    <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>{new Date(r.startAt).toLocaleString()}</td>
+                    <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>
+                      {new Date(r.startAt).toLocaleString()}
+                    </td>
                     <td style={{ padding: 6, borderTop: `1px solid ${theme.border}` }}>
                       <button style={btnGhost} onClick={() => onViewSerial(r.serial)}>
                         View
@@ -1189,7 +1399,9 @@ function Dashboard({
   );
 }
 
-// ===== History =====
+// ===== History (lookup, view, export) =====
+type HistoryRow = { type: 'intake' | 'repair'; when: string; data: Intake | Repair };
+
 function History({
   intakes,
   repairs,
@@ -1203,26 +1415,33 @@ function History({
   const [selected, setSelected] = useState<any | null>(null);
   const [showCombined, setShowCombined] = useState(false);
 
-  const list = useMemo(() => {
+  const list: HistoryRow[] = useMemo(() => {
     const serial = q.trim();
-    type Row = { type: 'intake' | 'repair'; when: string; data: Intake | Repair };
-    if (!serial) return [] as Row[];
-    const a: Row[] = intakes.filter(i => i.serial === serial).map(i => ({ type: 'intake', when: i.createdAt, data: i }));
-    const b: Row[] = repairs.filter(r => r.serial === serial).map(r => ({ type: 'repair', when: r.startAt, data: r }));
-    return [...a, ...b].sort((x, y) => new Date(x.when).getTime() - new Date(y.when).getTime());
+    if (!serial) return [];
+    const a: HistoryRow[] = intakes
+      .filter((i) => i.serial === serial)
+      .map((i) => ({ type: 'intake', when: i.createdAt, data: i }));
+    const b: HistoryRow[] = repairs
+      .filter((r) => r.serial === serial)
+      .map((r) => ({ type: 'repair', when: r.startAt, data: r }));
+    return [...a, ...b].sort(
+      (x, y) => new Date(x.when).getTime() - new Date(y.when).getTime()
+    );
   }, [q, intakes, repairs]);
 
   const combinedRec: CombinedRecord | null = useMemo(() => {
     const serial = q.trim();
     if (!serial) return null;
-    const intake = intakes.slice().reverse().find(i => i.serial === serial);
-    const reps = repairs.filter(r => r.serial === serial).sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+    const intake = intakes.slice().reverse().find((i) => i.serial === serial);
+    const reps = repairs
+      .filter((r) => r.serial === serial)
+      .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
     return { serial, intake, repairs: reps };
   }, [q, intakes, repairs]);
 
   function exportCsv() {
     const rows: Record<string, any>[] = [];
-    intakes.forEach(i =>
+    intakes.forEach((i) =>
       rows.push({
         kind: 'intake',
         serial: i.serial,
@@ -1232,10 +1451,9 @@ function History({
         source: i.returnSource,
         reason: i.returnReason,
         createdAt: i.createdAt,
-        notes: i.notes || '',
       })
     );
-    repairs.forEach(r =>
+    repairs.forEach((r) =>
       rows.push({
         kind: 'repair',
         serial: r.serial,
@@ -1244,7 +1462,6 @@ function History({
         disposition: r.disposition,
         startAt: r.startAt,
         endAt: r.endAt || '',
-        notes: r.notes || '',
       })
     );
     downloadCSV('repairs_history.csv', rows);
@@ -1253,6 +1470,7 @@ function History({
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <div style={{ fontSize: 20, fontWeight: 600 }}>History Lookup</div>
+
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           style={{ ...fieldStyle, maxWidth: 360 }}
@@ -1305,7 +1523,9 @@ function History({
         </div>
       )}
 
-      {q && list.length === 0 && <div style={{ fontSize: 12, color: theme.subtext }}>No records for this serial.</div>}
+      {q && list.length === 0 && (
+        <div style={{ fontSize: 12, color: theme.subtext }}>No records for this serial.</div>
+      )}
 
       <div style={{ display: 'grid', gap: 8 }}>
         {list.map((row, idx) => (
@@ -1314,15 +1534,29 @@ function History({
               <div>
                 <span style={chip}>{row.type.toUpperCase()}</span>
               </div>
-              <div style={{ fontSize: 12, color: theme.subtext }}>{new Date(row.when).toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: theme.subtext }}>
+                {new Date(row.when).toLocaleString()}
+              </div>
             </div>
+
             {row.type === 'intake' ? (
               <div style={{ fontSize: 13, marginTop: 8 }}>
-                <div><b>Serial:</b> {(row.data as Intake).serial}</div>
-                <div><b>Family/Model:</b> {(row.data as Intake).family} / {(row.data as Intake).model} — {(row.data as Intake).sizeIn}"</div>
-                <div><b>Return:</b> {(row.data as Intake).returnSource} – {(row.data as Intake).returnReason}</div>
+                <div>
+                  <b>Serial:</b> {(row.data as Intake).serial}
+                </div>
+                <div>
+                  <b>Family/Model:</b> {(row.data as Intake).family} /{' '}
+                  {(row.data as Intake).model} — {(row.data as Intake).sizeIn}"
+                </div>
+                <div>
+                  <b>Return:</b> {(row.data as Intake).returnSource} –{' '}
+                  {(row.data as Intake).returnReason}
+                </div>
                 {(row.data as Intake).notes ? (
-                  <div><b>Notes:</b> {(row.data as Intake).notes}</div>
+                  <div style={{ marginTop: 4, fontSize: 12, color: theme.subtext }}>
+                    {String((row.data as Intake).notes).slice(0, 120)}
+                    {String((row.data as Intake).notes).length > 120 ? '…' : ''}
+                  </div>
                 ) : null}
                 <div style={{ marginTop: 8 }}>
                   <button
@@ -1338,11 +1572,21 @@ function History({
               </div>
             ) : (
               <div style={{ fontSize: 13, marginTop: 8 }}>
-                <div><b>Serial:</b> {(row.data as Repair).serial}</div>
-                <div><b>Failure/Disp:</b> {(row.data as Repair).failureCode} / {(row.data as Repair).disposition}</div>
-                <div><b>Actions:</b> {(row.data as Repair).actions.join(', ')}</div>
+                <div>
+                  <b>Serial:</b> {(row.data as Repair).serial}
+                </div>
+                <div>
+                  <b>Failure/Disp:</b> {(row.data as Repair).failureCode} /{' '}
+                  {(row.data as Repair).disposition}
+                </div>
+                <div>
+                  <b>Actions:</b> {(row.data as Repair).actions.join(', ')}
+                </div>
                 {(row.data as Repair).notes ? (
-                  <div><b>Notes:</b> {(row.data as Repair).notes}</div>
+                  <div style={{ marginTop: 4, fontSize: 12, color: theme.subtext }}>
+                    {String((row.data as Repair).notes).slice(0, 120)}
+                    {String((row.data as Repair).notes).length > 120 ? '…' : ''}
+                  </div>
                 ) : null}
                 <div style={{ marginTop: 8 }}>
                   <button
@@ -1397,7 +1641,10 @@ function AdminPanel({
       .filter((n) => !isNaN(n));
   }
   function parseList(t: string) {
-    return t.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+    return t
+      .split(/\n+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
   function save() {
     onSave(parseSizes(szText), parseList(srcText), parseList(reaText));
@@ -1409,7 +1656,12 @@ function AdminPanel({
       <div style={card}>
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Admin Access</div>
         <p style={{ fontSize: 13, color: theme.subtext }}>Enter pass key to unlock settings:</p>
-        <input style={fieldStyle} type="password" value={inputKey} onChange={(e) => setInputKey(e.target.value)} />
+        <input
+          style={fieldStyle}
+          type="password"
+          value={inputKey}
+          onChange={(e) => setInputKey(e.target.value)}
+        />
         <button style={btnStyle} onClick={checkKey}>
           Enter
         </button>
@@ -1451,20 +1703,46 @@ export default function App() {
   const [intakes, setIntakes] = useIndexedDB<Intake>('intakes', []);
   const [repairs, setRepairs] = useIndexedDB<Repair>('repairs', []);
 
-  // Live Firestore listeners (single block; no duplicates)
-  useEffect(() => {
-    const stopIntakes = listenIntakes((rows) => setIntakes(rows as any));
-    const stopRepairs = listenRepairs((rows) => setRepairs(rows as any));
-    return () => {
-      stopIntakes();
-      stopRepairs();
-    };
-  }, [setIntakes, setRepairs]);
+  const [sizes, setSizes] = useState<number[]>(() => {
+    if (!isBrowser) return DEFAULT_TV_SIZES;
+    try {
+      const raw = localStorage.getItem('sizes');
+      return raw ? JSON.parse(raw) : DEFAULT_TV_SIZES;
+    } catch {
+      return DEFAULT_TV_SIZES;
+    }
+  });
+  const [sources, setSources] = useState<string[]>(() => {
+    if (!isBrowser) return DEFAULT_RETURN_SOURCE_SUGGESTIONS;
+    try {
+      const raw = localStorage.getItem('sources');
+      return raw ? JSON.parse(raw) : DEFAULT_RETURN_SOURCE_SUGGESTIONS;
+    } catch {
+      return DEFAULT_RETURN_SOURCE_SUGGESTIONS;
+    }
+  });
+  const [reasons, setReasons] = useState<string[]>(() => {
+    if (!isBrowser) return DEFAULT_RETURN_REASON_SUGGESTIONS;
+    try {
+      const raw = localStorage.getItem('reasons');
+      return raw ? JSON.parse(raw) : DEFAULT_RETURN_REASON_SUGGESTIONS;
+    } catch {
+      return DEFAULT_RETURN_REASON_SUGGESTIONS;
+    }
+  });
 
-  // Admin lists -> localStorage seeds (using defaults in Intake form selects)
-  const [sizes, setSizes] = useState<number[]>(DEFAULT_TV_SIZES);
-  const [sources, setSources] = useState<string[]>(DEFAULT_RETURN_SOURCE_SUGGESTIONS);
-  const [reasons, setReasons] = useState<string[]>(DEFAULT_RETURN_REASON_SUGGESTIONS);
+  useEffect(() => {
+    if (!isBrowser) return;
+    localStorage.setItem('sizes', JSON.stringify(sizes));
+  }, [sizes]);
+  useEffect(() => {
+    if (!isBrowser) return;
+    localStorage.setItem('sources', JSON.stringify(sources));
+  }, [sources]);
+  useEffect(() => {
+    if (!isBrowser) return;
+    localStorage.setItem('reasons', JSON.stringify(reasons));
+  }, [reasons]);
 
   const serials = useMemo(() => Array.from(new Set(intakes.map((i) => i.serial))), [intakes]);
   const [historySerial, setHistorySerial] = useState<string | undefined>(undefined);
@@ -1477,22 +1755,38 @@ export default function App() {
           top: 0,
           background: `linear-gradient(90deg,${theme.primaryDark},${theme.primary})`,
           borderBottom: `1px solid ${theme.border}`,
-          zIndex: 10,
         }}
       >
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div
-            style={{
-              fontWeight: 800,
-              letterSpacing: 0.3,
-              color: 'white',
-              fontSize: 20,
-              textShadow: '1px 1px 2px #000',
-            }}
-          >
-            ROKU 1PTV Repair
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: '0 auto',
+            padding: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Creator watermark + Title */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 240 }}>
+            <div style={{ fontSize: 11, color: 'white', opacity: 0.85, fontWeight: 600 }}>
+              Creator: Edgar Garcia
+            </div>
+            <div
+              style={{
+                fontWeight: 800,
+                letterSpacing: 0.3,
+                color: 'white',
+                fontSize: 20,
+                textShadow: '1px 1px 2px #000',
+              }}
+            >
+              ROKU 1PTV Repair
+            </div>
           </div>
-          <nav style={{ display: 'flex', gap: 8, fontSize: 14, marginLeft: 12 }}>
+
+          <nav style={{ display: 'flex', gap: 8, fontSize: 14, flexWrap: 'wrap' }}>
             {(['intake', 'repair', 'dashboard', 'history', 'admin'] as const).map((t) => (
               <button
                 key={t}
@@ -1503,51 +1797,36 @@ export default function App() {
               </button>
             ))}
           </nav>
-          <div style={{ marginLeft: 'auto', fontSize: 12, color: 'white', opacity: 0.9 }}>
-            Creator: Edgar Garcia
-          </div>
         </div>
-         </header>
+      </header>
 
-  
-   <main style={{ maxWidth: 1100, margin: '0 auto', padding: 16 }}>
-
+      <main style={{ maxWidth: 1100, margin: '0 auto', padding: 16 }}>
         {tab === 'intake' && (
           <IntakeForm
             sizes={sizes}
             sources={sources}
             reasons={reasons}
-            onSaved={async (i) => {
-              setIntakes((prev) => [...prev, i]); // local
-              try { await saveIntakeCloud(i); } catch (e) { console.error('Cloud intake save failed', e); }
-            }}
+            onSaved={(i) => setIntakes((prev) => [...prev, i])}
           />
         )}
 
         {tab === 'repair' && (
-  <RepairForm
-    serials={serials}
-    onSaved={async (r) => {
-              setRepairs((prev) => [...prev, r]); // local
-              try { await saveRepairCloud(r); } catch (e) { console.error('Cloud repair save failed', e); }
-            }}
-          />
+          <RepairForm serials={serials} onSaved={(r) => setRepairs((prev) => [...prev, r])} />
         )}
 
         {tab === 'dashboard' && (
           <Dashboard
             intakes={intakes}
             repairs={repairs}
-            onViewSerial={(sn) => { setHistorySerial(sn); setTab('history'); }}
+            onViewSerial={(sn) => {
+              setHistorySerial(sn);
+              setTab('history');
+            }}
           />
         )}
 
         {tab === 'history' && (
-          <History
-            intakes={intakes}
-            repairs={repairs}
-            initialSerial={historySerial}
-          />
+          <History intakes={intakes} repairs={repairs} initialSerial={historySerial} />
         )}
 
         {tab === 'admin' && (
@@ -1555,17 +1834,17 @@ export default function App() {
             sizes={sizes}
             sources={sources}
             reasons={reasons}
-            onSave={(ns, so, re) => { setSizes(ns); setSources(so); setReasons(re); }}
+            onSave={(ns, so, re) => {
+              setSizes(ns);
+              setSources(so);
+              setReasons(re);
+            }}
           />
         )}
       </main>
     </div>
   );
 }
-
-  
-
-
 
 
 
